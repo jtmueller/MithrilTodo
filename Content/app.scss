@@ -1,0 +1,19 @@
+﻿label.todo {
+    font-weight: normal;
+}
+
+label.todo.completed {
+    text-decoration: line-through;
+    color: silver;
+}
+
+i.close {
+    font-size: 25pt;
+}
+
+.icon-close {
+    display: inline-block;
+    padding: 6px 0px;
+    margin: 6px 0px;
+    cursor: pointer;
+}
