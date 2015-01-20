@@ -1,6 +1,5 @@
 ﻿module TodoApp {
 
-    //the Todo class has two properties
     class Todo {
         text: (value?: string) => string;
         completed: (value?: boolean) => boolean;
@@ -29,14 +28,13 @@
             this.todos = [];
             this.firebaseRef = new Firebase("https://hrbo-todo.firebaseio.com/todos/");
             this.firebaseRef.on('value', data => {
-                m.startComputation();
                 this.todos = [];
                 data.forEach(x => {
                     var item = x.val();
                     //console.log(item);
                     this.todos.push(new Todo(item.text, item.completed, item.key));
                 });
-                m.endComputation();
+                m.redraw();
             });
         }
 
@@ -138,10 +136,58 @@
         return output;
     }
 
-    // following are the functions expected of MithrilModule:
-    export var controller = Controller;
+    function renderInputForm(vm: ViewModel) {
+        return m('form', { onsubmit: vm.add }, [
+            m('.form-group',
+                m('.form-control-wrapper', [
+                    m('input.form-control[type=text]', {
+                        placeholder: 'What needs to be done?',
+                        onkeypress: m.withAttr('value', vm.description),
+                        value: vm.description()
+                    }),
+                    m('span.material-input')
+                ])
+            )
+        ])
+    }
 
-    export function view(controller: Controller) {
+    function renderToDo(vm: ViewModel, task: Todo) {
+        return m('.panel.panel-default', { key: task.key },
+            m('.panel-body', [
+                m('.col-xs-2',
+                    m('.checkbox',
+                        m('label', [
+                            m('input[type=checkbox]', {
+                                id: 'todo_' + task.key,
+                                onclick: e => {
+                                    task.completed(e.target.checked);
+                                    vm.update(task);
+                                },
+                                checked: task.completed()
+                            }),
+                            m('span.ripple'),
+                            m('span.check')
+                        ])
+                    )
+                ),
+                m('.col-xs-8',
+                    m('label.todo', {
+                        htmlFor: 'todo_' + task.key,
+                        style: {
+                            textDecoration: task.completed() ? 'line-through' : 'none',
+                            color: task.completed() ? 'silver' : 'inherit'
+                        }
+                    }, task.text())
+                ),
+                m('.col-xs-2',
+                    m('.icon-close', { onclick: vm.remove.bind(vm, task.key) },
+                        m('i.mdi-content-clear.close'))
+                )
+            ])
+        );
+    }
+
+    function view(controller: Controller) {
         var vm = controller.vm;
         var items = vm.list.getItems();
         var todoGroups = groupSize(items, 5);
@@ -149,62 +195,20 @@
         return m('.container.todoApp', [
             m('.row',
                 m('.col-md-4.col-md-offset-4.col-xs-10',
-                    m('form', { onsubmit: vm.add }, [
-                        m('.form-group', m('.form-control-wrapper', [
-                            m('input.form-control[type=text]', {
-                                placeholder: 'What needs to be done?',
-                                onkeypress: m.withAttr('value', vm.description),
-                                value: vm.description()
-                            }),
-                            m('span.material-input')
-                        ]))
-                    ])
+                    renderInputForm(vm)
                 )
             ),
-            m('.row', [
-                todoGroups.map(todos =>
-                    m('.col-lg-4', [
-                        todos.map((task: Todo) =>
-                            m('.panel.panel-default', { key: task.key },
-                                m('.panel-body', [
-                                    m('.col-xs-2',
-                                        m('.checkbox',
-                                            m('label', [
-                                                m('input[type=checkbox]', {
-                                                    id: 'todo_' + task.key,
-                                                    onclick: e => {
-                                                        task.completed(e.target.checked);
-                                                        vm.update(task);
-                                                    },
-                                                    checked: task.completed()
-                                                }),
-                                                m('span.ripple'),
-                                                m('span.check')
-                                            ])
-                                        )
-                                    ),
-                                    m('.col-xs-8',
-                                        m('label.todo', {
-                                            htmlFor: 'todo_' + task.key,
-                                            style: {
-                                                textDecoration: task.completed() ? 'line-through' : 'none',
-                                                color: task.completed() ? 'silver' : 'inherit'
-                                            }
-                                        }, task.text())
-                                    ),
-                                    m('.col-xs-2',
-                                        m('.icon-close', { onclick: vm.remove.bind(vm, task.key) },
-                                            m('i.mdi-content-clear.close'))
-                                    )
-                                ])
-                            )
-                        )
-                    ])
-                )
-            ])
+            m('.row', todoGroups.map(group =>
+                m('.col-lg-4', group.map(renderToDo.bind(undefined, vm))))
+            )
         ]);
+    }
+
+    export var Module: MithrilModule = {
+        controller: Controller,
+        view: view
     }
 }
 
 //initialize the application
-m.module(document.body, TodoApp);
+m.module(document.body, TodoApp.Module);
