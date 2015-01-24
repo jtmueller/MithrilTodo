@@ -1,6 +1,25 @@
 ﻿module Utils {
+
+    export function groupSize<T>(items: T[], size: number) {
+        var output: T[][] = [];
+        var group: T[] = [];
+
+        items.forEach((item, i) => {
+            if (i > 0 && i % size === 0) {
+                output.push(group);
+                group = [];
+            }
+            group.push(item);
+            if (i === items.length - 1) {
+                output.push(group);
+            }
+        });
+
+        return output;
+    }
+
     /**
-     * Get closest DOM element up the tree that contains a class, ID, or data attribute
+     * Get closest DOM element up the tree that contains a class, ID, or attribute
      * @param  {Node} elem The base element
      * @param  {String} selector The class, id, data attribute, or tag to look for
      * @return {Node} Null if no match
@@ -42,24 +61,6 @@
 
         return null;
     };
-
-    export function groupSize<T>(items: T[], size: number) {
-        var output: T[][] = [];
-        var group: T[] = [];
-
-        items.forEach((item, i) => {
-            if (i > 0 && i % size === 0) {
-                output.push(group);
-                group = [];
-            }
-            group.push(item);
-            if (i === items.length - 1) {
-                output.push(group);
-            }
-        });
-
-        return output;
-    }
 
     export function fadesOut(callback: Function, parentSelector?: string) {
         return (e:Event) => {
