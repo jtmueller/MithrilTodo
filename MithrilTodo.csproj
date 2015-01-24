@@ -10,7 +10,7 @@
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
-    <TypeScriptToolsVersion>1.1</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>1.4</TypeScriptToolsVersion>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
@@ -41,6 +41,8 @@
     <TypeScriptCompile Include="Scripts\typings\firebase\firebase-simplelogin.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\firebase\firebase.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\mithril\mithril.d.ts" />
+    <TypeScriptCompile Include="Scripts\typings\velocity\velocity.d.ts" />
+    <TypeScriptCompile Include="Scripts\utils.ts" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />

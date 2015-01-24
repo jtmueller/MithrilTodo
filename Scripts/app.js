@@ -14,6 +14,9 @@ var TodoApp;
                 completed: this.completed()
             };
         };
+        Todo.fromJson = function (data) {
+            return new Todo(data.text, data.completed, data.key);
+        };
         return Todo;
     })();
     var TodoStore = (function () {
@@ -24,8 +27,8 @@ var TodoApp;
             this.firebaseRef.on('value', function (data) {
                 _this.todos = [];
                 data.forEach(function (x) {
-                    var item = x.val();
-                    _this.todos.push(new Todo(item.text, item.completed, item.key));
+                    //console.log(x.val());
+                    _this.todos.push(Todo.fromJson(x.val()));
                 });
                 m.redraw();
             });
@@ -50,12 +53,17 @@ var TodoApp;
         };
         return TodoStore;
     })();
+    //the view-model tracks a running list of todos,
+    //stores a description for new todos before they are created
+    //and takes care of the logic surrounding when adding is permitted
+    //and clearing the input after adding a todo to the list
     var ViewModel = (function () {
         function ViewModel(store) {
             this.list = store;
             this.description = m.prop('');
             this.add = this.add.bind(this);
         }
+        /** adds a todo to the list, and clears the description field for user convenience */
         ViewModel.prototype.add = function (e) {
             e.preventDefault();
             if (this.description()) {
@@ -71,6 +79,8 @@ var TodoApp;
         };
         return ViewModel;
     })();
+    //the controller defines what part of the model is relevant for the current page
+    //in our case, there's only one view-model that handles everything
     var Controller = (function () {
         function Controller() {
             this.store = new TodoStore();
@@ -81,23 +91,6 @@ var TodoApp;
         };
         return Controller;
     })();
-    function groupSize(items, size) {
-        var output = [];
-        var group = [];
-        items.forEach(function (item, i) {
-            var didPush = false;
-            if (i > 0 && i % size === 0) {
-                output.push(group);
-                group = [];
-                didPush = true;
-            }
-            group.push(item);
-            if (!didPush && i === items.length - 1) {
-                output.push(group);
-            }
-        });
-        return output;
-    }
     function renderInputForm(vm) {
         return m('form', { onsubmit: vm.add }, [
             m('.form-group', m('.form-control-wrapper', [
@@ -131,15 +124,17 @@ var TodoApp;
                     color: task.completed() ? 'silver' : 'inherit'
                 }
             }, task.text())),
-            m('.col-xs-2', m('.icon-close', { onclick: vm.remove.bind(vm, task.key) }, m('i.mdi-content-clear.close')))
+            m('.col-xs-2', m('.icon-close', m('i.mdi-content-clear.close', {
+                onclick: Utils.fadesOut(vm.remove.bind(vm, task.key), '.panel')
+            })))
         ]));
     }
     function view(controller) {
         var vm = controller.vm;
         var items = vm.list.getItems();
-        var todoGroups = groupSize(items, 5);
+        var todoGroups = Utils.groupSize(items, 5);
         return m('.container.todoApp', [
-            m('.row', m('.col-md-4.col-md-offset-4.col-xs-10', renderInputForm(vm))),
+            m('.row', m('.col-md-4.col-md-offset-4.col-xs-10.col-xs-offset-2', renderInputForm(vm))),
             m('.row', todoGroups.map(function (group) { return m('.col-lg-4', group.map(renderToDo.bind(undefined, vm))); }))
         ]);
     }
@@ -148,4 +143,6 @@ var TodoApp;
         view: view
     };
 })(TodoApp || (TodoApp = {}));
+//initialize the application
 m.module(document.body, TodoApp.Module);
+//# sourceMappingURL=app.js.map

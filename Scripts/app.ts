@@ -1,5 +1,11 @@
 ﻿module TodoApp {
 
+    interface TodoData {
+        text: string;
+        completed: boolean;
+        key: string
+    }
+
     class Todo {
         text: (value?: string) => string;
         completed: (value?: boolean) => boolean;
@@ -11,12 +17,16 @@
             this.key = key;
         }
 
-        toJson() {
+        toJson(): TodoData {
             return {
                 key: this.key,
                 text: this.text(),
                 completed: this.completed()
             };
+        }
+
+        static fromJson(data: TodoData) {
+            return new Todo(data.text, data.completed, data.key);
         }
     }
 
@@ -30,9 +40,8 @@
             this.firebaseRef.on('value', data => {
                 this.todos = [];
                 data.forEach(x => {
-                    var item = x.val();
-                    //console.log(item);
-                    this.todos.push(new Todo(item.text, item.completed, item.key));
+                    //console.log(x.val());
+                    this.todos.push(Todo.fromJson(x.val()));
                 });
                 m.redraw();
             });
@@ -116,26 +125,6 @@
         }
     }
 
-    function groupSize<T>(items: T[], size: number) {
-        var output: T[][] = [];
-        var group: T[] = [];
-
-        items.forEach((item, i) => {
-            var didPush = false;
-            if (i > 0 && i % size === 0) {
-                output.push(group);
-                group = [];
-                didPush = true;
-            }
-            group.push(item);
-            if (!didPush && i === items.length - 1) {
-                output.push(group);
-            }
-        });
-
-        return output;
-    }
-
     function renderInputForm(vm: ViewModel) {
         return m('form', { onsubmit: vm.add }, [
             m('.form-group',
@@ -180,8 +169,11 @@
                     }, task.text())
                 ),
                 m('.col-xs-2',
-                    m('.icon-close', { onclick: vm.remove.bind(vm, task.key) },
-                        m('i.mdi-content-clear.close'))
+                    m('.icon-close', 
+                        m('i.mdi-content-clear.close', {
+                            onclick: Utils.fadesOut(vm.remove.bind(vm, task.key), '.panel')
+                        })
+                    )
                 )
             ])
         );
@@ -190,11 +182,11 @@
     function view(controller: Controller) {
         var vm = controller.vm;
         var items = vm.list.getItems();
-        var todoGroups = groupSize(items, 5);
+        var todoGroups = Utils.groupSize(items, 5);
 
         return m('.container.todoApp', [
             m('.row',
-                m('.col-md-4.col-md-offset-4.col-xs-10',
+                m('.col-md-4.col-md-offset-4.col-xs-10.col-xs-offset-2',
                     renderInputForm(vm)
                 )
             ),

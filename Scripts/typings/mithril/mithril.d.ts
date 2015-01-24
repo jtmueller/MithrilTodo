@@ -14,7 +14,7 @@ interface MithrilStatic {
 	trust(html: string): String;
 	render(rootElement: Element, children?: any): void;
 	render(rootElement: HTMLDocument, children?: any): void;
-	redraw(): void;
+    redraw: MithrilRedraw;
 	route(rootElement: Element, defaultRoute: string, routes: { [key: string]: MithrilModule }): void;
 	route(rootElement: HTMLDocument, defaultRoute: string, routes: { [key: string]: MithrilModule }): void;
 	route(path: string, params?: any, shouldReplaceHistory?: boolean): void;
@@ -25,6 +25,11 @@ interface MithrilStatic {
 	sync(promises: MithrilPromise[]): MithrilPromise;
 	startComputation(): void;
 	endComputation(): void;
+}
+
+interface MithrilRedraw {
+    (): void;
+    strategy: (value?: string) => string;
 }
 
 interface MithrilVirtualElement {

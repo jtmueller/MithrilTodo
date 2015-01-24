@@ -10,6 +10,7 @@ namespace MithrilTodo
         {
             bundles.Add(new ScriptBundle("~/bundles/script").Include(
                 "~/Scripts/mithril.js",
+                "~/Scripts/utils.js",
                 // app goes last
                 "~/Scripts/app.js"
             ));
