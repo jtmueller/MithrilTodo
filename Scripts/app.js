@@ -58,11 +58,11 @@ var TodoApp;
         title: 'Delete Task?',
         buttons: [{
             text: 'Yes',
-            id: 2 /* Yes */,
+            id: Modal.Button.Yes,
             primary: true
         }, {
             text: 'No',
-            id: 3 /* No */
+            id: Modal.Button.No
         }]
     });
     //the view-model tracks a running list of todos,
@@ -89,8 +89,13 @@ var TodoApp;
         };
         ViewModel.prototype.remove = function (key, description) {
             var _this = this;
-            this.dialogController.show(function () { return m('p', 'Are you sure?'); }).then(function (button) {
-                if (button === 2 /* Yes */) {
+            this.dialogController.show(function () { return m('p', [
+                'Are you sure you want to permanently delete this task?',
+                m('div', {
+                    style: { paddingLeft: '20px', paddingTop: '20px' }
+                }, m('em', description))
+            ]); }).then(function (button) {
+                if (button === Bootstrap.Modal.Button.Yes) {
                     // TODO: re-add fade-out
                     _this.list.remove(key);
                 }

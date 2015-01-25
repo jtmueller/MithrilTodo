@@ -120,12 +120,12 @@
 
         remove(key: string, description: string) {
             this.dialogController.show<Bootstrap.Modal.Button>(() =>
-                m('p', 'Are you sure?')
-                //m('p', [
-                //    'Are you sure you want to permanently delete the task "',
-                //    m('em', description),
-                //    '"?'
-                //])
+                m('p', [
+                    'Are you sure you want to permanently delete this task?',
+                    m('div', {
+                        style: { paddingLeft: '20px', paddingTop: '20px' }
+                    }, m('em', description))
+                ])
             ).then(button => {
                 if (button === Bootstrap.Modal.Button.Yes) {
                     // TODO: re-add fade-out
