@@ -17,7 +17,7 @@
             this.key = key;
         }
 
-        toJson(): TodoData {
+        toObj(): TodoData {
             return {
                 key: this.key,
                 text: this.text(),
@@ -25,7 +25,7 @@
             };
         }
 
-        static fromJson(data: TodoData) {
+        static fromObj(data: TodoData) {
             return new Todo(data.text, data.completed, data.key);
         }
     }
@@ -41,7 +41,7 @@
                 this.todos = [];
                 data.forEach(x => {
                     //console.log(x.val());
-                    this.todos.push(Todo.fromJson(x.val()));
+                    this.todos.push(Todo.fromObj(x.val()));
                 });
                 m.redraw();
             });
@@ -54,7 +54,7 @@
         push(item: Todo) {
             var newItem = this.firebaseRef.push();
             item.key = newItem.key();
-            newItem.set(item.toJson());
+            newItem.set(item.toObj());
         }
 
         remove(key: string) {
@@ -66,7 +66,7 @@
         update(item: Todo) {
             this.firebaseRef
                 .child(item.key)
-                .update(item.toJson());
+                .update(item.toObj());
         }
 
         unload() {
@@ -88,6 +88,14 @@
             id: Modal.Button.No
         }]
     });
+
+    function confirmContent(description: string) {
+        return () =>
+            m('.confirmDlg', [
+                'Are you sure you want to permanently delete this task?',
+                m('.panel.panel-default', m('.panel-body', description))
+            ]);
+    }
 
     //the view-model tracks a running list of todos,
     //stores a description for new todos before they are created
@@ -119,19 +127,14 @@
         }
 
         remove(key: string, description: string) {
-            this.dialogController.show<Bootstrap.Modal.Button>(() =>
-                m('p', [
-                    'Are you sure you want to permanently delete this task?',
-                    m('div', {
-                        style: { paddingLeft: '20px', paddingTop: '20px' }
-                    }, m('em', description))
-                ])
-            ).then(button => {
-                if (button === Bootstrap.Modal.Button.Yes) {
-                    // TODO: re-add fade-out
-                    this.list.remove(key);
-                }
-            });
+            var content = confirmContent(description);
+
+            this.dialogController.show<Bootstrap.Modal.Button>(content)
+                .then(button => {
+                    if (button === Bootstrap.Modal.Button.Yes) {
+                        this.list.remove(key);
+                    }
+                });
         }
     }
 

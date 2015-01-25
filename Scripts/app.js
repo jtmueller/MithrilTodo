@@ -7,14 +7,14 @@ var TodoApp;
             this.completed = m.prop(completed);
             this.key = key;
         }
-        Todo.prototype.toJson = function () {
+        Todo.prototype.toObj = function () {
             return {
                 key: this.key,
                 text: this.text(),
                 completed: this.completed()
             };
         };
-        Todo.fromJson = function (data) {
+        Todo.fromObj = function (data) {
             return new Todo(data.text, data.completed, data.key);
         };
         return Todo;
@@ -27,8 +27,7 @@ var TodoApp;
             this.firebaseRef.on('value', function (data) {
                 _this.todos = [];
                 data.forEach(function (x) {
-                    //console.log(x.val());
-                    _this.todos.push(Todo.fromJson(x.val()));
+                    _this.todos.push(Todo.fromObj(x.val()));
                 });
                 m.redraw();
             });
@@ -39,13 +38,13 @@ var TodoApp;
         TodoStore.prototype.push = function (item) {
             var newItem = this.firebaseRef.push();
             item.key = newItem.key();
-            newItem.set(item.toJson());
+            newItem.set(item.toObj());
         };
         TodoStore.prototype.remove = function (key) {
             this.firebaseRef.child(key).remove();
         };
         TodoStore.prototype.update = function (item) {
-            this.firebaseRef.child(item.key).update(item.toJson());
+            this.firebaseRef.child(item.key).update(item.toObj());
         };
         TodoStore.prototype.unload = function () {
             this.firebaseRef.off('value');
@@ -58,17 +57,19 @@ var TodoApp;
         title: 'Delete Task?',
         buttons: [{
             text: 'Yes',
-            id: Modal.Button.Yes,
+            id: 2 /* Yes */,
             primary: true
         }, {
             text: 'No',
-            id: Modal.Button.No
+            id: 3 /* No */
         }]
     });
-    //the view-model tracks a running list of todos,
-    //stores a description for new todos before they are created
-    //and takes care of the logic surrounding when adding is permitted
-    //and clearing the input after adding a todo to the list
+    function confirmContent(description) {
+        return function () { return m('.confirmDlg', [
+            'Are you sure you want to permanently delete this task?',
+            m('.panel.panel-default', m('.panel-body', description))
+        ]); };
+    }
     var ViewModel = (function () {
         function ViewModel(store, dialogController) {
             this.dialogController = dialogController;
@@ -76,7 +77,6 @@ var TodoApp;
             this.description = m.prop('');
             this.add = this.add.bind(this);
         }
-        /** adds a todo to the list, and clears the description field for user convenience */
         ViewModel.prototype.add = function (e) {
             e.preventDefault();
             if (this.description()) {
@@ -89,22 +89,15 @@ var TodoApp;
         };
         ViewModel.prototype.remove = function (key, description) {
             var _this = this;
-            this.dialogController.show(function () { return m('p', [
-                'Are you sure you want to permanently delete this task?',
-                m('div', {
-                    style: { paddingLeft: '20px', paddingTop: '20px' }
-                }, m('em', description))
-            ]); }).then(function (button) {
-                if (button === Bootstrap.Modal.Button.Yes) {
-                    // TODO: re-add fade-out
+            var content = confirmContent(description);
+            this.dialogController.show(content).then(function (button) {
+                if (button === 2 /* Yes */) {
                     _this.list.remove(key);
                 }
             });
         };
         return ViewModel;
     })();
-    //the controller defines what part of the model is relevant for the current page
-    //in our case, there's only one view-model that handles everything
     var Controller = (function () {
         function Controller() {
             this.store = new TodoStore();
@@ -150,7 +143,7 @@ var TodoApp;
                 }
             }, task.text())),
             m('.col-xs-2', m('.icon-close', m('i.mdi-content-clear.close', {
-                onclick: vm.remove.bind(vm, task.key, task.text()) // Utils.fadesOut(vm.remove.bind(vm, task.key), '.panel')
+                onclick: vm.remove.bind(vm, task.key, task.text())
             })))
         ]));
     }
@@ -169,6 +162,4 @@ var TodoApp;
         view: view
     };
 })(TodoApp || (TodoApp = {}));
-//initialize the application
 m.module(document.body, TodoApp.Module);
-//# sourceMappingURL=app.js.map

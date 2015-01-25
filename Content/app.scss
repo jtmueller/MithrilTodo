@@ -20,5 +20,10 @@
 
 .todoApp .modal {
     display: block;
-    position: absolute;
+    position: fixed;
+}
+
+.todoApp .confirmDlg .panel-body {
+    margin-top: 20px;
+    font-style: italic;
 }

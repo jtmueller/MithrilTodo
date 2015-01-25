@@ -69,7 +69,7 @@
                 m.startComputation();
                 this.vm.render = false;
                 m.endComputation();
-            }, 500);
+            }, 250); // css animation lasts 0.15 seconds, or 200ms
         }
     }
 
