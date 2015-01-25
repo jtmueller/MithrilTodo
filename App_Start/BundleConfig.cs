@@ -9,7 +9,6 @@ namespace MithrilTodo
         public static void RegisterBundles(BundleCollection bundles)
         {
             bundles.Add(new ScriptBundle("~/bundles/script").Include(
-                "~/Scripts/mithril.js",
                 "~/Scripts/utils.js",
                 "~/Scripts/bootstrap-modal.js",
                 // app goes last
@@ -17,9 +16,6 @@ namespace MithrilTodo
             ));
 
             bundles.Add(new StyleBundle("~/bundles/css").Include(
-                "~/Content/bootstrap.css",
-                "~/Content/ripples.css",
-                "~/Content/material-wfont.css",
                 "~/Content/app.css"
             ));
 
