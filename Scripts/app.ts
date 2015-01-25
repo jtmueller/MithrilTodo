@@ -75,6 +75,20 @@
         }
     }
 
+    var Modal = Bootstrap.Modal;
+
+    var confirmDialog = Modal.create({
+        title: 'Delete Task?',
+        buttons: [{
+            text: 'Yes',
+            id: Modal.Button.Yes,
+            primary: true
+        }, {
+            text: 'No',
+            id: Modal.Button.No
+        }]
+    });
+
     //the view-model tracks a running list of todos,
     //stores a description for new todos before they are created
     //and takes care of the logic surrounding when adding is permitted
@@ -85,7 +99,7 @@
         /** a slot to store the name of a new todo before it is created */
         description: (value?: string) => string;
 
-        constructor(store: TodoStore) {
+        constructor(store: TodoStore, private dialogController: Bootstrap.Modal.ModalController) {
             this.list = store;
             this.description = m.prop('');
             this.add = this.add.bind(this);
@@ -104,8 +118,20 @@
             this.list.update(item);
         }
 
-        remove(key: string) {
-            this.list.remove(key);
+        remove(key: string, description: string) {
+            this.dialogController.show<Bootstrap.Modal.Button>(() =>
+                m('p', 'Are you sure?')
+                //m('p', [
+                //    'Are you sure you want to permanently delete the task "',
+                //    m('em', description),
+                //    '"?'
+                //])
+            ).then(button => {
+                if (button === Bootstrap.Modal.Button.Yes) {
+                    // TODO: re-add fade-out
+                    this.list.remove(key);
+                }
+            });
         }
     }
 
@@ -114,10 +140,12 @@
     class Controller {
         vm: ViewModel;
         store: TodoStore;
+        dialogController: Bootstrap.Modal.ModalController;
 
         constructor() {
             this.store = new TodoStore();
-            this.vm = new ViewModel(this.store);
+            this.dialogController = confirmDialog.controllerFactory();
+            this.vm = new ViewModel(this.store, this.dialogController);
         }
 
         onunload(e) {
@@ -171,7 +199,7 @@
                 m('.col-xs-2',
                     m('.icon-close', 
                         m('i.mdi-content-clear.close', {
-                            onclick: Utils.fadesOut(vm.remove.bind(vm, task.key), '.panel')
+                            onclick: vm.remove.bind(vm, task.key, task.text())  // Utils.fadesOut(vm.remove.bind(vm, task.key), '.panel')
                         })
                     )
                 )
@@ -192,7 +220,8 @@
             ),
             m('.row', todoGroups.map(group =>
                 m('.col-lg-4', group.map(renderToDo.bind(undefined, vm))))
-            )
+            ),
+            confirmDialog.view(controller.dialogController)
         ]);
     }
 

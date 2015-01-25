@@ -53,12 +53,25 @@ var TodoApp;
         };
         return TodoStore;
     })();
+    var Modal = Bootstrap.Modal;
+    var confirmDialog = Modal.create({
+        title: 'Delete Task?',
+        buttons: [{
+            text: 'Yes',
+            id: 2 /* Yes */,
+            primary: true
+        }, {
+            text: 'No',
+            id: 3 /* No */
+        }]
+    });
     //the view-model tracks a running list of todos,
     //stores a description for new todos before they are created
     //and takes care of the logic surrounding when adding is permitted
     //and clearing the input after adding a todo to the list
     var ViewModel = (function () {
-        function ViewModel(store) {
+        function ViewModel(store, dialogController) {
+            this.dialogController = dialogController;
             this.list = store;
             this.description = m.prop('');
             this.add = this.add.bind(this);
@@ -74,8 +87,14 @@ var TodoApp;
         ViewModel.prototype.update = function (item) {
             this.list.update(item);
         };
-        ViewModel.prototype.remove = function (key) {
-            this.list.remove(key);
+        ViewModel.prototype.remove = function (key, description) {
+            var _this = this;
+            this.dialogController.show(function () { return m('p', 'Are you sure?'); }).then(function (button) {
+                if (button === 2 /* Yes */) {
+                    // TODO: re-add fade-out
+                    _this.list.remove(key);
+                }
+            });
         };
         return ViewModel;
     })();
@@ -84,7 +103,8 @@ var TodoApp;
     var Controller = (function () {
         function Controller() {
             this.store = new TodoStore();
-            this.vm = new ViewModel(this.store);
+            this.dialogController = confirmDialog.controllerFactory();
+            this.vm = new ViewModel(this.store, this.dialogController);
         }
         Controller.prototype.onunload = function (e) {
             this.store.unload();
@@ -125,7 +145,7 @@ var TodoApp;
                 }
             }, task.text())),
             m('.col-xs-2', m('.icon-close', m('i.mdi-content-clear.close', {
-                onclick: Utils.fadesOut(vm.remove.bind(vm, task.key), '.panel')
+                onclick: vm.remove.bind(vm, task.key, task.text()) // Utils.fadesOut(vm.remove.bind(vm, task.key), '.panel')
             })))
         ]));
     }
@@ -135,7 +155,8 @@ var TodoApp;
         var todoGroups = Utils.groupSize(items, 5);
         return m('.container.todoApp', [
             m('.row', m('.col-md-4.col-md-offset-4.col-xs-10.col-xs-offset-2', renderInputForm(vm))),
-            m('.row', todoGroups.map(function (group) { return m('.col-lg-4', group.map(renderToDo.bind(undefined, vm))); }))
+            m('.row', todoGroups.map(function (group) { return m('.col-lg-4', group.map(renderToDo.bind(undefined, vm))); })),
+            confirmDialog.view(controller.dialogController)
         ]);
     }
     TodoApp.Module = {
