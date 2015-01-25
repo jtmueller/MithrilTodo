@@ -217,7 +217,7 @@
 
         return m('.container.todoApp', [
             m('.row',
-                m('.col-md-4.col-md-offset-4.col-xs-10.col-xs-offset-2',
+                m('.col-md-4.col-md-offset-4.col-xs-10.col-xs-offset-1',
                     renderInputForm(vm)
                 )
             ),
