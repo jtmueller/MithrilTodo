@@ -25,13 +25,40 @@
     <Content Include="Content\app.min.css">
       <DependentUpon>app.css</DependentUpon>
     </Content>
+    <Content Include="Content\bootstrap-theme.css" />
+    <Content Include="Content\bootstrap-theme.min.css">
+      <DependentUpon>bootstrap-theme.css</DependentUpon>
+    </Content>
+    <Content Include="Content\bootstrap.css" />
+    <Content Include="Content\bootstrap.min.css">
+      <DependentUpon>bootstrap.css</DependentUpon>
+    </Content>
+    <Content Include="Content\material-wfont.css" />
+    <Content Include="Content\material-wfont.min.css">
+      <DependentUpon>material-wfont.css</DependentUpon>
+    </Content>
+    <Content Include="Content\ripples.css" />
+    <Content Include="Content\ripples.min.css">
+      <DependentUpon>ripples.css</DependentUpon>
+    </Content>
+    <Content Include="fonts\glyphicons-halflings-regular.svg" />
+    <Content Include="fonts\Material-Design-Icons.svg" />
     <Content Include="Global.asax" />
+    <Content Include="Scripts\app.js">
+      <DependentUpon>app.ts</DependentUpon>
+    </Content>
+    <Content Include="Scripts\bootstrap-modal.js">
+      <DependentUpon>bootstrap-modal.ts</DependentUpon>
+    </Content>
     <Content Include="Scripts\mithril.js" />
     <Content Include="Scripts\mithril.min.js">
       <DependentUpon>mithril.js</DependentUpon>
     </Content>
     <Content Include="Scripts\mithril.min.js.map">
       <DependentUpon>mithril.js</DependentUpon>
+    </Content>
+    <Content Include="Scripts\utils.js">
+      <DependentUpon>utils.ts</DependentUpon>
     </Content>
     <Content Include="web.config" />
   </ItemGroup>
@@ -47,6 +74,40 @@
   <ItemGroup>
     <Content Include="packages.config" />
     <Content Include="index.cshtml" />
+    <Content Include="Content\bootstrap-theme.css.map">
+      <DependentUpon>bootstrap-theme.css</DependentUpon>
+    </Content>
+    <Content Include="Content\bootstrap.css.map">
+      <DependentUpon>bootstrap.css</DependentUpon>
+    </Content>
+    <Content Include="Content\material-wfont.css.map">
+      <DependentUpon>material-wfont.css</DependentUpon>
+    </Content>
+    <Content Include="Content\material-wfont.min.css.map">
+      <DependentUpon>material-wfont.css</DependentUpon>
+    </Content>
+    <Content Include="Content\ripples.css.map">
+      <DependentUpon>ripples.css</DependentUpon>
+    </Content>
+    <Content Include="Content\ripples.min.css.map">
+      <DependentUpon>ripples.css</DependentUpon>
+    </Content>
+    <Content Include="fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="fonts\glyphicons-halflings-regular.woff2" />
+    <Content Include="fonts\Material-Design-Icons.eot" />
+    <Content Include="fonts\Material-Design-Icons.ttf" />
+    <Content Include="fonts\Material-Design-Icons.woff" />
+    <Content Include="Scripts\app.js.map">
+      <DependentUpon>app.ts</DependentUpon>
+    </Content>
+    <Content Include="Scripts\bootstrap-modal.js.map">
+      <DependentUpon>bootstrap-modal.ts</DependentUpon>
+    </Content>
+    <Content Include="Scripts\utils.js.map">
+      <DependentUpon>utils.ts</DependentUpon>
+    </Content>
     <None Include="web.Debug.config">
       <DependentUpon>web.config</DependentUpon>
     </None>
