@@ -32,7 +32,7 @@
 
         constructor(public options: ModalOptions) {
             this.vm = new ModalViewModel();
-            this.close = this.close.bind(this);
+            this.hide = this.hide.bind(this);
         }
 
         show<T>(content: ModalContentView): MithrilPromise<T> {
@@ -57,7 +57,7 @@
             return this.dlgResult.promise;
         }
 
-        close(result?: any) {
+        hide(result?: any) {
             m.startComputation();
             this.vm.visible = false;
             this.dlgResult.resolve(result);
@@ -77,7 +77,7 @@
         return ctrl.options.buttons.map(btn => {
             var btnClass = btn.primary ? 'btn-primary' : 'btn-default';
             return m(`button.btn.${ btnClass }[type=button]`,
-                { onclick: ctrl.close.bind(ctrl, btn.id) }, btn.text);
+                { onclick: ctrl.hide.bind(ctrl, btn.id) }, btn.text);
         });
     }
 
@@ -89,7 +89,7 @@
                 m('.modal-content', [
                     m('.modal-header', [
                         m('button.close[type=button][aria-label=Close]',
-                            { onclick: ctrl.close },
+                            { onclick: ctrl.hide },
                             m('span[aria-hidden=true]', m.trust('&times;'))
                         ),
                         m('h4.modal-title', ctrl.options.title)

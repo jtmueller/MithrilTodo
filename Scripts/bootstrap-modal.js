@@ -21,7 +21,7 @@ var Bootstrap;
             function ModalController(options) {
                 this.options = options;
                 this.vm = new ModalViewModel();
-                this.close = this.close.bind(this);
+                this.hide = this.hide.bind(this);
             }
             ModalController.prototype.show = function (content) {
                 var _this = this;
@@ -41,7 +41,7 @@ var Bootstrap;
                 }, 10);
                 return this.dlgResult.promise;
             };
-            ModalController.prototype.close = function (result) {
+            ModalController.prototype.hide = function (result) {
                 var _this = this;
                 m.startComputation();
                 this.vm.visible = false;
@@ -60,7 +60,7 @@ var Bootstrap;
         function renderButtons(ctrl) {
             return ctrl.options.buttons.map(function (btn) {
                 var btnClass = btn.primary ? 'btn-primary' : 'btn-default';
-                return m("button.btn." + btnClass + "[type=button]", { onclick: ctrl.close.bind(ctrl, btn.id) }, btn.text);
+                return m("button.btn." + btnClass + "[type=button]", { onclick: ctrl.hide.bind(ctrl, btn.id) }, btn.text);
             });
         }
         function view(ctrl) {
@@ -68,7 +68,7 @@ var Bootstrap;
                 return null;
             return m('.modal.fade' + (ctrl.vm.visible ? '.in' : ''), m('.modal-dialog', m('.modal-content', [
                 m('.modal-header', [
-                    m('button.close[type=button][aria-label=Close]', { onclick: ctrl.close }, m('span[aria-hidden=true]', m.trust('&times;'))),
+                    m('button.close[type=button][aria-label=Close]', { onclick: ctrl.hide }, m('span[aria-hidden=true]', m.trust('&times;'))),
                     m('h4.modal-title', ctrl.options.title)
                 ]),
                 m('.modal-body', ctrl.vm.content()),
