@@ -9,8 +9,10 @@ namespace MithrilTodo
         public static void RegisterBundles(BundleCollection bundles)
         {
             bundles.Add(new ScriptBundle("~/bundles/script").Include(
+                "~/Scripts/config.js",
                 "~/Scripts/utils.js",
                 "~/Scripts/bootstrap-modal.js",
+                "~/Scripts/auth.js",
                 // app goes last
                 "~/Scripts/app.js"
             ));

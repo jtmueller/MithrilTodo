@@ -9,25 +9,26 @@ var TodoApp;
         }
         Todo.prototype.toObj = function () {
             return {
-                key: this.key,
                 text: this.text(),
                 completed: this.completed()
             };
         };
-        Todo.fromObj = function (data) {
-            return new Todo(data.text, data.completed, data.key);
+        Todo.fromObj = function (data, key) {
+            return new Todo(data.text, data.completed, key);
         };
         return Todo;
     })();
     var TodoStore = (function () {
-        function TodoStore() {
+        function TodoStore(authData) {
             var _this = this;
+            this.authData = authData;
             this.todos = [];
-            this.firebaseRef = new Firebase("https://hrbo-todo.firebaseio.com/todos/");
-            this.firebaseRef.on('value', function (data) {
+            this.ref = new Firebase("" + TodoApp.Config.firebaseUrl + "/users/" + authData.uid + "/todos");
+            this.ref.on('value', function (data) {
                 _this.todos = [];
                 data.forEach(function (x) {
-                    _this.todos.push(Todo.fromObj(x.val()));
+                    //console.log(x.val());
+                    _this.todos.push(Todo.fromObj(x.val(), x.key()));
                 });
                 m.redraw();
             });
@@ -36,19 +37,18 @@ var TodoApp;
             return this.todos;
         };
         TodoStore.prototype.push = function (item) {
-            var newItem = this.firebaseRef.push();
-            item.key = newItem.key();
+            var newItem = this.ref.push();
             newItem.set(item.toObj());
         };
         TodoStore.prototype.remove = function (key) {
-            this.firebaseRef.child(key).remove();
+            this.ref.child(key).remove();
         };
         TodoStore.prototype.update = function (item) {
-            this.firebaseRef.child(item.key).update(item.toObj());
+            this.ref.child(item.key).update(item.toObj());
         };
         TodoStore.prototype.unload = function () {
-            this.firebaseRef.off('value');
-            this.firebaseRef = null;
+            this.ref.off('value');
+            this.ref = null;
         };
         return TodoStore;
     })();
@@ -70,6 +70,10 @@ var TodoApp;
             m('.panel.panel-default', m('.panel-body', description))
         ]); };
     }
+    //the view-model tracks a running list of todos,
+    //stores a description for new todos before they are created
+    //and takes care of the logic surrounding when adding is permitted
+    //and clearing the input after adding a todo to the list
     var ViewModel = (function () {
         function ViewModel(store, dialogController) {
             this.dialogController = dialogController;
@@ -77,6 +81,7 @@ var TodoApp;
             this.description = m.prop('');
             this.add = this.add.bind(this);
         }
+        /** adds a todo to the list, and clears the description field for user convenience */
         ViewModel.prototype.add = function (e) {
             e.preventDefault();
             if (this.description()) {
@@ -98,11 +103,21 @@ var TodoApp;
         };
         return ViewModel;
     })();
+    //the controller defines what part of the model is relevant for the current page
+    //in our case, there's only one view-model that handles everything
     var Controller = (function () {
         function Controller() {
-            this.store = new TodoStore();
-            this.dialogController = confirmDialog.controllerFactory();
-            this.vm = new ViewModel(this.store, this.dialogController);
+            var _this = this;
+            TodoApp.Auth.login().then(function (authData) {
+                if (authData) {
+                    m.startComputation();
+                    _this.authData = authData;
+                    _this.store = new TodoStore(_this.authData);
+                    _this.dialogController = confirmDialog.controllerFactory();
+                    _this.vm = new ViewModel(_this.store, _this.dialogController);
+                    m.endComputation();
+                }
+            }, function (err) { return console.error(err); });
         }
         Controller.prototype.onunload = function (e) {
             this.store.unload();
@@ -143,11 +158,13 @@ var TodoApp;
                 }
             }, task.text())),
             m('.col-xs-2', m('.icon-close', m('i.mdi-content-clear.close', {
-                onclick: vm.remove.bind(vm, task.key, task.text())
+                onclick: vm.remove.bind(vm, task.key, task.text()) // Utils.fadesOut(vm.remove.bind(vm, task.key), '.panel')
             })))
         ]));
     }
     function view(controller) {
+        if (!controller.authData)
+            return null;
         var vm = controller.vm;
         var items = vm.list.getItems();
         var todoGroups = Utils.groupSize(items, 5);
@@ -162,4 +179,6 @@ var TodoApp;
         view: view
     };
 })(TodoApp || (TodoApp = {}));
+//initialize the application
 m.module(document.body, TodoApp.Module);
+//# sourceMappingURL=app.js.map

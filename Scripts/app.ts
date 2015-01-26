@@ -3,7 +3,6 @@
     interface TodoData {
         text: string;
         completed: boolean;
-        key: string
     }
 
     class Todo {
@@ -19,29 +18,28 @@
 
         toObj(): TodoData {
             return {
-                key: this.key,
                 text: this.text(),
                 completed: this.completed()
             };
         }
 
-        static fromObj(data: TodoData) {
-            return new Todo(data.text, data.completed, data.key);
+        static fromObj(data: TodoData, key: string) {
+            return new Todo(data.text, data.completed, key);
         }
     }
 
     class TodoStore {
-        private firebaseRef: Firebase;
+        private ref: Firebase;
         private todos: Todo[];
 
-        constructor() {
+        constructor(private authData: FirebaseAuthData) {
             this.todos = [];
-            this.firebaseRef = new Firebase("https://hrbo-todo.firebaseio.com/todos/");
-            this.firebaseRef.on('value', data => {
+            this.ref = new Firebase(`${Config.firebaseUrl}/users/${authData.uid}/todos`);
+            this.ref.on('value', data => {
                 this.todos = [];
                 data.forEach(x => {
                     //console.log(x.val());
-                    this.todos.push(Todo.fromObj(x.val()));
+                    this.todos.push(Todo.fromObj(x.val(), x.key()));
                 });
                 m.redraw();
             });
@@ -52,26 +50,25 @@
         }
 
         push(item: Todo) {
-            var newItem = this.firebaseRef.push();
-            item.key = newItem.key();
+            var newItem = this.ref.push();
             newItem.set(item.toObj());
         }
 
         remove(key: string) {
-            this.firebaseRef
+            this.ref
                 .child(key)
                 .remove();
         }
 
         update(item: Todo) {
-            this.firebaseRef
+            this.ref
                 .child(item.key)
                 .update(item.toObj());
         }
 
         unload() {
-            this.firebaseRef.off('value');
-            this.firebaseRef = null;
+            this.ref.off('value');
+            this.ref = null;
         }
     }
 
@@ -144,11 +141,20 @@
         vm: ViewModel;
         store: TodoStore;
         dialogController: Bootstrap.Modal.ModalController;
+        authData: FirebaseAuthData;
 
         constructor() {
-            this.store = new TodoStore();
-            this.dialogController = confirmDialog.controllerFactory();
-            this.vm = new ViewModel(this.store, this.dialogController);
+            Auth.login().then(authData => {
+                if (authData) {
+                    m.startComputation();
+                    this.authData = authData;
+                    this.store = new TodoStore(this.authData);
+                    this.dialogController = confirmDialog.controllerFactory();
+                    this.vm = new ViewModel(this.store, this.dialogController);
+                    m.endComputation();
+                }
+            },
+            err => console.error(err));
         }
 
         onunload(e) {
@@ -211,6 +217,8 @@
     }
 
     function view(controller: Controller) {
+        if (!controller.authData) return null;
+
         var vm = controller.vm;
         var items = vm.list.getItems();
         var todoGroups = Utils.groupSize(items, 5);
