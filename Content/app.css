@@ -24,12 +24,11 @@
 
 .authBox {
   margin-top: 10%;
-  height: 180px;
-  top: auto;
-  bottom: auto; }
+  height: 180px; }
   .authBox button {
-    margin-left: auto;
-    margin-right: auto; }
+    width: 114px;
+    left: 50%;
+    margin-left: -57px; }
     .authBox button.google {
       background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAAsUlEQVR4AZXBvysHYRwA4OfeTuluMalLFoN/wUh+lUkxWUy6jbIpi1mRxWiQbMoki+kGixRlwfKdvquUkqLX/iniefzHkNaON1lnXy2o3FlF49GDimhFNgJa2SxAAvCBYdBhUKTUdwKWPalFmPPsypaecT8a9enYLwr3viyKUFpzZs+2W+9mBMm5awmUTt0IJmXzAMa8CqZlBwDWXQiSXS+OLFhy6FIjwoAJmzZMKfzdN6wXKEn5adivAAAAAElFTkSuQmCCf567adb93a5e289c5c32f19dc21b593b');
       background-position: 7px 10px;
