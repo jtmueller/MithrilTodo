@@ -29,8 +29,14 @@
     <Content Include="Scripts\app.js">
       <DependentUpon>app.ts</DependentUpon>
     </Content>
+    <Content Include="Scripts\auth.js">
+      <DependentUpon>auth.ts</DependentUpon>
+    </Content>
     <Content Include="Scripts\bootstrap-modal.js">
       <DependentUpon>bootstrap-modal.ts</DependentUpon>
+    </Content>
+    <Content Include="Scripts\config.js">
+      <DependentUpon>config.ts</DependentUpon>
     </Content>
     <Content Include="Scripts\utils.js">
       <DependentUpon>utils.ts</DependentUpon>
@@ -59,6 +65,12 @@
     </Content>
     <Content Include="Scripts\utils.js.map">
       <DependentUpon>utils.ts</DependentUpon>
+    </Content>
+    <Content Include="Scripts\auth.js.map">
+      <DependentUpon>auth.ts</DependentUpon>
+    </Content>
+    <Content Include="Scripts\config.js.map">
+      <DependentUpon>config.ts</DependentUpon>
     </Content>
     <None Include="web.Debug.config">
       <DependentUpon>web.config</DependentUpon>
