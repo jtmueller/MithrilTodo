@@ -16,34 +16,24 @@ var Utils;
         return output;
     }
     Utils.groupSize = groupSize;
-    /**
-     * Get closest DOM element up the tree that contains a class, ID, or attribute
-     * @param  {Node} elem The base element
-     * @param  {String} selector The class, id, data attribute, or tag to look for
-     * @return {Node} Null if no match
-     */
     function getClosest(element, selector) {
         var firstChar = selector.charAt(0);
         for (var elem = element; elem && elem !== document; elem = elem.parentNode) {
-            // If selector is a class
             if (firstChar === '.') {
                 if (elem.classList.contains(selector.substr(1))) {
                     return elem;
                 }
             }
-            // If selector is an ID
             if (firstChar === '#') {
                 if (elem.id === selector.substr(1)) {
                     return elem;
                 }
             }
-            // If selector is an attribute
             if (firstChar === '[') {
                 if (elem.hasAttribute(selector.substr(1, selector.length - 2))) {
                     return elem;
                 }
             }
-            // If selector is a tag
             if (elem.tagName.toLowerCase() === selector) {
                 return elem;
             }
@@ -54,7 +44,6 @@ var Utils;
     ;
     function fadesOut(callback, parentSelector) {
         return function (e) {
-            //don't redraw yet
             m.redraw.strategy("none");
             var target = e.target;
             if (parentSelector) {
@@ -64,7 +53,6 @@ var Utils;
                 Velocity(target, { opacity: 0 }, {
                     duration: 750,
                     complete: function () {
-                        //now that the animation finished, redraw
                         m.startComputation();
                         callback();
                         m.endComputation();
@@ -72,7 +60,6 @@ var Utils;
                 });
             }
             else {
-                // we couldn't find the target, so skip the animation
                 m.startComputation();
                 callback();
                 m.endComputation();
@@ -81,4 +68,3 @@ var Utils;
     }
     Utils.fadesOut = fadesOut;
 })(Utils || (Utils = {}));
-//# sourceMappingURL=utils.js.map

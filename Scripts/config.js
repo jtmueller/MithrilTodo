@@ -5,4 +5,3 @@ var TodoApp;
         Config.firebaseUrl = "https://hrbo-todo.firebaseio.com";
     })(Config = TodoApp.Config || (TodoApp.Config = {}));
 })(TodoApp || (TodoApp = {}));
-//# sourceMappingURL=config.js.map

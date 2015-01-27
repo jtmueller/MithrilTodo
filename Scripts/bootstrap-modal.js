@@ -35,7 +35,6 @@ var Bootstrap;
                 this.dlgResult = m.deferred();
                 m.endComputation();
                 setTimeout(function () {
-                    // this allows for CSS animations to fade-in the element
                     m.startComputation();
                     _this.vm.visible = true;
                     m.endComputation();
@@ -50,11 +49,10 @@ var Bootstrap;
                 this.dlgResult = null;
                 m.endComputation();
                 setTimeout(function () {
-                    // this allows for CSS animations to fade-out the element before it's removed from the dom
                     m.startComputation();
                     _this.vm.render = false;
                     m.endComputation();
-                }, 250); // css animation lasts 0.15 seconds, or 200ms
+                }, 250);
             };
             return ModalController;
         })();
@@ -86,4 +84,3 @@ var Bootstrap;
         Modal.create = create;
     })(Modal = Bootstrap.Modal || (Bootstrap.Modal = {}));
 })(Bootstrap || (Bootstrap = {}));
-//# sourceMappingURL=bootstrap-modal.js.map

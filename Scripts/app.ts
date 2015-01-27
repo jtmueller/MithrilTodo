@@ -144,7 +144,7 @@
         authData: FirebaseAuthData;
 
         constructor() {
-            Auth.login().then(authData => {
+            Auth.init().then(authData => {
                 if (authData) {
                     m.startComputation();
                     this.authData = authData;
@@ -153,8 +153,19 @@
                     this.vm = new ViewModel(this.store, this.dialogController);
                     m.endComputation();
                 }
-            },
-            err => console.error(err));
+            }, err => console.error(err));
+
+            window.addEventListener('keydown', ev => {
+                if (ev.shiftKey && ev.ctrlKey && ev.keyCode === 76) {
+                    // user pressed ctrl+shift+L - log them out
+                    Auth.logout();
+                    document.location.reload();
+                }
+            });
+        }
+
+        login(provider: AuthProvider) {
+            Auth.authenticate(provider);
         }
 
         onunload(e) {
@@ -216,8 +227,30 @@
         );
     }
 
+    function renderLoginBox(controller: Controller) {
+        return m('.container.todoApp', m('.row',
+            m('.col-md-4.col-md-offset-4.col-xs-10.col-xs-offset-1',
+                m('.authBox.well', [
+                    m('.row', m('.col-xs-offset-1', m('h3', 'Mithril Todo'))),
+                    m('.row', m('.col-xs-offset-1', 'Please log in to access your private to-do list.')),
+                    m('.row',
+                        m('.col-xs-offset-4', 
+                            m('button.google.btn.btn-raised.btn-material-red-600[type=button]',
+                                { onclick: controller.login.bind(controller, AuthProvider.google) }, [
+                                'Google',
+                                m('.ripple-wrapper')
+                            ])
+                        )
+                    )
+                ])
+            )
+        ));
+    }
+
     function view(controller: Controller) {
-        if (!controller.authData) return null;
+        if (!controller.authData) {
+            return renderLoginBox(controller);
+        }
 
         var vm = controller.vm;
         var items = vm.list.getItems();
