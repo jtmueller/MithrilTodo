@@ -2,6 +2,45 @@ var Bootstrap;
 (function (Bootstrap) {
     var Modal;
     (function (Modal) {
+        Modal.Module = {
+            controller: ModalController,
+            view: view
+        };
+        var ModalController = (function () {
+            function ModalController() {
+                this.vm = new ModalViewModel();
+                this.hide = this.hide.bind(this);
+            }
+            ModalController.prototype.show = function (opts) {
+                if (this.dlgResult) {
+                    return this.dlgResult.promise;
+                }
+                this.dlgResult = m.deferred();
+                this.vm.show(opts);
+                return this.dlgResult.promise;
+            };
+            ModalController.prototype.hide = function (result) {
+                this.dlgResult.resolve(result);
+                this.dlgResult = null;
+                this.vm.hide();
+            };
+            return ModalController;
+        })();
+        Modal.ModalController = ModalController;
+        function view(ctrl) {
+            var vm = ctrl.vm;
+            if (!vm.render)
+                return null;
+            return m('.modal' + (vm.visible ? '.fade.in' : '.fade'), m('.modal-dialog', m('.modal-content', [
+                m('.modal-header', [
+                    m('button.close[type=button][aria-label=Close]', { onclick: ctrl.hide }, m('span[aria-hidden=true]', m.trust('&times;'))),
+                    m('h4.modal-title', vm.title)
+                ]),
+                m('.modal-body', vm.content()),
+                m('.modal-footer', renderButtons(ctrl))
+            ])));
+        }
+        Modal.view = view;
         (function (Button) {
             Button[Button["Ok"] = 0] = "Ok";
             Button[Button["Cancel"] = 1] = "Cancel";
@@ -15,72 +54,39 @@ var Bootstrap;
         var ModalViewModel = (function () {
             function ModalViewModel() {
             }
+            ModalViewModel.prototype.show = function (opts) {
+                var _this = this;
+                m.startComputation();
+                this.title = opts.title;
+                this.content = opts.content;
+                this.buttons = opts.buttons;
+                this.render = true;
+                this.visible = false;
+                m.endComputation();
+                setTimeout(function () {
+                    // this allows for CSS animations to fade-in on the element
+                    _this.visible = true;
+                    m.redraw();
+                }, 16);
+            };
+            ModalViewModel.prototype.hide = function () {
+                var _this = this;
+                this.visible = false;
+                m.redraw();
+                setTimeout(function () {
+                    // this allows for CSS animations to fade-out the element before it's removed from the dom
+                    _this.render = false;
+                    m.redraw();
+                }, 250); // css animation lasts 0.15 seconds, or 200ms
+            };
             return ModalViewModel;
         })();
-        var ModalController = (function () {
-            function ModalController(options) {
-                this.options = options;
-                this.vm = new ModalViewModel();
-                this.hide = this.hide.bind(this);
-            }
-            ModalController.prototype.show = function (content) {
-                var _this = this;
-                if (this.dlgResult) {
-                    return this.dlgResult.promise;
-                }
-                m.startComputation();
-                this.vm.content = content;
-                this.vm.render = true;
-                this.vm.visible = false;
-                this.dlgResult = m.deferred();
-                m.endComputation();
-                setTimeout(function () {
-                    m.startComputation();
-                    _this.vm.visible = true;
-                    m.endComputation();
-                }, 10);
-                return this.dlgResult.promise;
-            };
-            ModalController.prototype.hide = function (result) {
-                var _this = this;
-                m.startComputation();
-                this.vm.visible = false;
-                this.dlgResult.resolve(result);
-                this.dlgResult = null;
-                m.endComputation();
-                setTimeout(function () {
-                    m.startComputation();
-                    _this.vm.render = false;
-                    m.endComputation();
-                }, 250);
-            };
-            return ModalController;
-        })();
-        Modal.ModalController = ModalController;
         function renderButtons(ctrl) {
-            return ctrl.options.buttons.map(function (btn) {
+            return ctrl.vm.buttons.map(function (btn) {
                 var btnClass = btn.primary ? 'btn-primary' : 'btn-default';
-                return m("button.btn." + btnClass + "[type=button]", { onclick: ctrl.hide.bind(ctrl, btn.id) }, btn.text);
+                return m("button.btn." + btnClass + "[type=button]", { onclick: ctrl.hide.bind(ctrl, btn.value) }, btn.text);
             });
         }
-        function view(ctrl) {
-            if (!ctrl.vm.render)
-                return null;
-            return m('.modal.fade' + (ctrl.vm.visible ? '.in' : ''), m('.modal-dialog', m('.modal-content', [
-                m('.modal-header', [
-                    m('button.close[type=button][aria-label=Close]', { onclick: ctrl.hide }, m('span[aria-hidden=true]', m.trust('&times;'))),
-                    m('h4.modal-title', ctrl.options.title)
-                ]),
-                m('.modal-body', ctrl.vm.content()),
-                m('.modal-footer', renderButtons(ctrl))
-            ])));
-        }
-        function create(options) {
-            return {
-                controllerFactory: function () { return new ModalController(options); },
-                view: view
-            };
-        }
-        Modal.create = create;
     })(Modal = Bootstrap.Modal || (Bootstrap.Modal = {}));
 })(Bootstrap || (Bootstrap = {}));
+//# sourceMappingURL=bootstrap-modal.js.map

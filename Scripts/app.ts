@@ -1,97 +1,67 @@
 ﻿module TodoApp {
 
-    interface TodoData {
-        text: string;
-        completed: boolean;
-    }
+    //the controller defines what part of the model is relevant for the current page
+    //in our case, there's only one view-model that handles everything
+    export class TodoController {
+        vm: ViewModel;
+        store: TodoStore;
+        dialogController: Bootstrap.Modal.ModalController;
+        authData: FirebaseAuthData;
 
-    class Todo {
-        text: (value?: string) => string;
-        completed: (value?: boolean) => boolean;
-        key: string;
+        constructor() {
+            Auth.init().then(authData => {
+                if (authData) {
+                    m.startComputation();
+                    this.authData = authData;
+                    this.store = new TodoStore(this.authData);
+                    this.dialogController = new Bootstrap.Modal.ModalController()
+                    this.vm = new ViewModel(this.store, this.dialogController);
+                    m.endComputation();
+                }
+            }, err => console.error(err));
 
-        constructor(text: string, completed = false, key?: string) {
-            this.text = m.prop(text);
-            this.completed = m.prop(completed);
-            this.key = key;
+            window.addEventListener('keydown', this.keyDownHandler);
         }
 
-        toObj(): TodoData {
-            return {
-                text: this.text(),
-                completed: this.completed()
-            };
+        login(provider: AuthProvider) {
+            Auth.authenticate(provider);
         }
 
-        static fromObj(data: TodoData, key: string) {
-            return new Todo(data.text, data.completed, key);
-        }
-    }
-
-    class TodoStore {
-        private ref: Firebase;
-        private todos: Todo[];
-
-        constructor(private authData: FirebaseAuthData) {
-            this.todos = [];
-            this.ref = new Firebase(`${Config.firebaseUrl}/users/${authData.uid}/todos`);
-            this.ref.on('value', data => {
-                this.todos = [];
-                data.forEach(x => {
-                    //console.log(x.val());
-                    this.todos.push(Todo.fromObj(x.val(), x.key()));
-                });
-                m.redraw();
-            });
+        private keyDownHandler(e) {
+            if (e.shiftKey && e.ctrlKey && e.keyCode === 76) {
+                // user pressed ctrl+shift+L - log them out
+                Auth.logout();
+                document.location.reload();
+            }
         }
 
-        getItems() {
-            return this.todos;
-        }
-
-        push(item: Todo) {
-            var newItem = this.ref.push();
-            newItem.set(item.toObj());
-        }
-
-        remove(key: string) {
-            this.ref
-                .child(key)
-                .remove();
-        }
-
-        update(item: Todo) {
-            this.ref
-                .child(item.key)
-                .update(item.toObj());
-        }
-
-        unload() {
-            this.ref.off('value');
-            this.ref = null;
+        onunload(e) {
+            this.store.unload();
+            window.removeEventListener('keydown', this.keyDownHandler);
         }
     }
 
-    var Modal = Bootstrap.Modal;
+    export function view(ctrl: TodoController) {
+        if (!ctrl) return null;
+        if (!ctrl.authData) {
+            return renderLoginBox(ctrl);
+        }
 
-    var confirmDialog = Modal.create({
-        title: 'Delete Task?',
-        buttons: [{
-            text: 'Yes',
-            id: Modal.Button.Yes,
-            primary: true
-        }, {
-            text: 'No',
-            id: Modal.Button.No
-        }]
-    });
+        var vm = ctrl.vm;
+        var items = vm.list.getItems();
+        var todoGroups = Utils.groupSize(items, 5);
 
-    function confirmContent(description: string) {
-        return () =>
-            m('.confirmDlg', [
-                'Are you sure you want to permanently delete this task?',
-                m('.panel.panel-default', m('.panel-body', description))
-            ]);
+        return m('.container.todoApp', [
+            m('.row',
+                m('.col-md-4.col-md-offset-4.col-xs-10.col-xs-offset-1',
+                    renderInputForm(vm)
+                )
+            ),
+            m('.row', todoGroups.map(group =>
+                m('.col-lg-4', group.map(renderToDo.bind(undefined, vm))))
+            ),
+            Bootstrap.Modal.view(ctrl.dialogController)
+        ]);
     }
 
     //the view-model tracks a running list of todos,
@@ -124,53 +94,107 @@
         }
 
         remove(key: string, description: string) {
-            var content = confirmContent(description);
+            var content = confirmDialog(description);
 
             this.dialogController.show<Bootstrap.Modal.Button>(content)
                 .then(button => {
-                    if (button === Bootstrap.Modal.Button.Yes) {
-                        this.list.remove(key);
-                    }
-                });
-        }
-    }
-
-    //the controller defines what part of the model is relevant for the current page
-    //in our case, there's only one view-model that handles everything
-    class Controller {
-        vm: ViewModel;
-        store: TodoStore;
-        dialogController: Bootstrap.Modal.ModalController;
-        authData: FirebaseAuthData;
-
-        constructor() {
-            Auth.init().then(authData => {
-                if (authData) {
-                    m.startComputation();
-                    this.authData = authData;
-                    this.store = new TodoStore(this.authData);
-                    this.dialogController = confirmDialog.controllerFactory();
-                    this.vm = new ViewModel(this.store, this.dialogController);
-                    m.endComputation();
-                }
-            }, err => console.error(err));
-
-            window.addEventListener('keydown', ev => {
-                if (ev.shiftKey && ev.ctrlKey && ev.keyCode === 76) {
-                    // user pressed ctrl+shift+L - log them out
-                    Auth.logout();
-                    document.location.reload();
+                if (button === Bootstrap.Modal.Button.Yes) {
+                    this.list.remove(key);
                 }
             });
         }
+    }
 
-        login(provider: AuthProvider) {
-            Auth.authenticate(provider);
+    interface TodoData {
+        text: string;
+        completed: boolean;
+    }
+
+    class Todo {
+        text: (value?: string) => string;
+        completed: (value?: boolean) => boolean;
+        key: string;
+
+        constructor(text: string, completed = false, key?: string) {
+            this.text = m.prop(text);
+            this.completed = m.prop(completed);
+            this.key = key;
         }
 
-        onunload(e) {
-            this.store.unload();
+        toJSON(): TodoData {
+            return {
+                text: this.text(),
+                completed: this.completed()
+            };
         }
+
+        static fromJSON(data: TodoData, key: string) {
+            return new Todo(data.text, data.completed, key);
+        }
+    }
+
+    class TodoStore {
+        private ref: Firebase;
+        private todos: Todo[];
+
+        constructor(private authData: FirebaseAuthData) {
+            this.todos = [];
+            this.ref = new Firebase(`${Config.firebaseUrl}/users/${authData.uid}/todos`);
+            this.ref.on('value', data => {
+                this.todos = [];
+                data.forEach(x => {
+                    // TODO: use more granular events for better efficiency
+                    this.todos.push(Todo.fromJSON(x.val(), x.key()));
+                });
+                m.redraw();
+            });
+        }
+
+        getItems() {
+            return this.todos;
+        }
+
+        push(item: Todo) {
+            var newItem = this.ref.push();
+            newItem.set(item.toJSON());
+        }
+
+        remove(key: string) {
+            this.ref
+                .child(key)
+                .remove();
+        }
+
+        update(item: Todo) {
+            this.ref
+                .child(item.key)
+                .update(item.toJSON());
+        }
+
+        unload() {
+            this.ref.off('value');
+            this.ref = null;
+        }
+    }
+
+    var Modal = Bootstrap.Modal;
+
+    function confirmDialog(description: string): Bootstrap.Modal.ModalOptions {
+        return {
+            title: 'Delete Task?',
+            buttons: [{
+                text: 'Yes',
+                value: Modal.Button.Yes,
+                primary: true
+            }, {
+                text: 'No',
+                value: Modal.Button.No
+            }],
+            content: () => m('.confirmDlg', [
+                'Are you sure you want to permanently delete this task?',
+                m('.panel.panel-default', m('.panel-body', description))
+            ])
+        };
     }
 
     function renderInputForm(vm: ViewModel) {
@@ -223,7 +247,7 @@
         );
     }
 
-    function renderLoginBox(controller: Controller) {
+    function renderLoginBox(ctrl: TodoController) {
         return m('.container.todoApp', m('.row',
             m('.col-md-4.col-md-offset-4.col-xs-10.col-xs-offset-1',
                 m('.authBox.well', [
@@ -231,40 +255,17 @@
                     m('.row', m('.col-xs-10.col-xs-offset-1', 'Please log in to access your private to-do list.')),
                     m('.row',
                         m('button.google.btn.btn-raised.btn-material-red-600[type=button]',
-                            { onclick: controller.login.bind(controller, AuthProvider.google) }, [
-                            'Google',
-                            m('.ripple-wrapper')
-                        ])
+                            { onclick: ctrl.login.bind(ctrl, AuthProvider.google) },
+                            ['Google', m('.ripple-wrapper')]
+                        )
                     )
                 ])
             )
         ));
     }
 
-    function view(controller: Controller) {
-        if (!controller.authData) {
-            return renderLoginBox(controller);
-        }
-
-        var vm = controller.vm;
-        var items = vm.list.getItems();
-        var todoGroups = Utils.groupSize(items, 5);
-
-        return m('.container.todoApp', [
-            m('.row',
-                m('.col-md-4.col-md-offset-4.col-xs-10.col-xs-offset-1',
-                    renderInputForm(vm)
-                )
-            ),
-            m('.row', todoGroups.map(group =>
-                m('.col-lg-4', group.map(renderToDo.bind(undefined, vm))))
-            ),
-            confirmDialog.view(controller.dialogController)
-        ]);
-    }
-
     export var Module: MithrilModule = {
-        controller: Controller,
+        controller: TodoController,
         view: view
     }
 }

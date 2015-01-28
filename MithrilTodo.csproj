@@ -38,6 +38,10 @@
     <Content Include="Scripts\config.js">
       <DependentUpon>config.ts</DependentUpon>
     </Content>
+    <Content Include="Scripts\mithril.js" />
+    <Content Include="Scripts\mithril.min.js">
+      <DependentUpon>mithril.js</DependentUpon>
+    </Content>
     <Content Include="Scripts\utils.js">
       <DependentUpon>utils.ts</DependentUpon>
     </Content>
@@ -71,6 +75,9 @@
     </Content>
     <Content Include="Scripts\config.js.map">
       <DependentUpon>config.ts</DependentUpon>
+    </Content>
+    <Content Include="Scripts\mithril.min.js.map">
+      <DependentUpon>mithril.js</DependentUpon>
     </Content>
     <None Include="web.Debug.config">
       <DependentUpon>web.config</DependentUpon>
