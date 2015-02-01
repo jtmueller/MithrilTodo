@@ -1,5 +1,6 @@
 ﻿module Utils {
 
+	/** Breaks an array into groups of at most the given size. */
     export function groupSize<T>(items: T[], size: number) {
         var output: T[][] = [];
         var group: T[] = [];
@@ -18,49 +19,43 @@
         return output;
     }
 
+	export function isNull<T>(x: T) { return !x; }
+
+	export function isNotNull<T>(x: T) { return !!x; }
+
+	var matchFn: (selector: string) => boolean =
+		_(['matches', 'msMatchesSelector', 'webkitMatchesSelector', 'mozMatchesSelector'])
+			.map(fn => document.body[fn])
+			.find(isNotNull);
+
     /**
-     * Get closest DOM element up the tree that contains a class, ID, or attribute
-     * @param  {Node} elem The base element
-     * @param  {String} selector The class, id, data attribute, or tag to look for
-     * @return {Node} Null if no match
+     * Navigates up the DOM element tree returning the first element that matches the given selector, including the given element.
+     * @param elem The base element
+     * @param selector The CSS selector to match on.
+     * @return Null if no match
      */
-    export function getClosest(element: HTMLElement, selector: string): HTMLElement {
+    export function closest(element: HTMLElement, selector: string): HTMLElement {
+		if (element['closest'])
+			return element['closest'](selector);
 
-        var firstChar = selector.charAt(0);
-
-        // Get closest match
         for (var elem: any = element; elem && elem !== document; elem = elem.parentNode) {
-
-            // If selector is a class
-            if (firstChar === '.') {
-                if (elem.classList.contains(selector.substr(1))) {
-                    return elem;
-                }
-            }
-
-            // If selector is an ID
-            if (firstChar === '#') {
-                if (elem.id === selector.substr(1)) {
-                    return elem;
-                }
-            }
-
-            // If selector is an attribute
-            if (firstChar === '[') {
-                if (elem.hasAttribute(selector.substr(1, selector.length - 2))) {
-                    return elem;
-                }
-            }
-
-            // If selector is a tag
-            if (elem.tagName.toLowerCase() === selector) {
-                return elem;
-            }
-
+            if (matchFn.call(elem, selector)) {
+				return elem;
+			}
         }
 
         return null;
-    };
+    }
+
+	/** Returns the first child element that matches the given selector. */
+	export function down(element: HTMLElement, selector: string): HTMLElement {
+		return <HTMLElement>element.querySelector(selector);
+	}
+
+	/** Returns all the descendants of the given element that match the given selector. */
+	export function descendants(element: HTMLElement, selector: string): NodeListOf<HTMLElement> {
+		return <NodeListOf<HTMLElement>>element.querySelectorAll(selector);
+	}
 
     export function fadesOut(callback: Function, parentSelector?: string) {
         return (e:Event) => {
@@ -69,7 +64,7 @@
 
             var target = <HTMLElement>e.target;
             if (parentSelector) {
-                target = getClosest(target, parentSelector);
+                target = closest(target, parentSelector);
             }
 
             if (target) {
@@ -77,14 +72,14 @@
                     duration: 750,
                     complete: () => {
                         //now that the animation finished, redraw
-                        m.startComputation();
+						m.startComputation();
                         callback();
                         m.endComputation();
                     }
                 });
             } else {
                 // we couldn't find the target, so skip the animation
-                m.startComputation();
+				m.startComputation();
                 callback();
                 m.endComputation();
             }

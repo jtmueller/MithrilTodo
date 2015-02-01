@@ -29,9 +29,9 @@
 
     export function view(ctrl: ModalController) {
         var vm = ctrl.vm;
-        if (!vm.render) return null;
+        if (!vm.render()) return null;
 
-        return m('.modal' + (vm.visible ? '.fade.in' : '.fade'),
+        return m('.modal' + (vm.visible() ? '.fade.in' : '.fade'),
             m('.modal-dialog',
                 m('.modal-content', [
                     m('.modal-header', [
@@ -39,9 +39,9 @@
                             { onclick: ctrl.hide },
                             m('span[aria-hidden=true]', m.trust('&times;'))
                         ),
-                        m('h4.modal-title', vm.title)
+                        m('h4.modal-title', vm.title())
                     ]),
-                    m('.modal-body', vm.content()),
+                    m('.modal-body', vm.contentView()),
                     m('.modal-footer', renderButtons(ctrl))
                 ])
             )
@@ -67,35 +67,35 @@
     }
 
     class ModalViewModel {
-        render: boolean;
-        visible: boolean;
-        content: ModalContentView;
-        buttons: ModalButton[];
-        title: string;
+		render = m.prop(false);
+		visible = m.prop(false);
+		title = m.prop('');
+		contentView: ModalContentView = () => null;
+		buttons: ModalButton[] = [];
 
         show(opts: ModalOptions) {
             m.startComputation();
-            this.title = opts.title;
-            this.content = opts.content;
-            this.buttons = opts.buttons;
-            this.render = true;
-            this.visible = false;
+            this.title(opts.title);
+            this.contentView = opts.content;
+            this.buttons = opts.buttons || [];
+			this.render(true);
+			this.visible(false);
             m.endComputation();
 
             setTimeout(() => {
                 // this allows for CSS animations to fade-in on the element
-                this.visible = true;
+                this.visible(true);
                 m.redraw();
             }, 16);
         }
 
         hide() {
-            this.visible = false;
-            m.redraw();
+            this.visible(false);
+            //m.redraw();
 
             setTimeout(() => {
                 // this allows for CSS animations to fade-out the element before it's removed from the dom
-                this.render = false;
+                this.render(false);
                 m.redraw();
             }, 250); // css animation lasts 0.15 seconds, or 200ms
         }
@@ -104,7 +104,7 @@
     function renderButtons(ctrl: ModalController) {
         return ctrl.vm.buttons.map(btn => {
             var btnClass = btn.primary ? 'btn-primary' : 'btn-default';
-            return m(`button.btn.${ btnClass }[type=button]`,
+            return m(`button.btn.${btnClass}[type=button]`,
                 { onclick: ctrl.hide.bind(ctrl, btn.value) }, btn.text);
         });
     }

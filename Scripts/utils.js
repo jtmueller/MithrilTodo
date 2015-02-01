@@ -1,5 +1,6 @@
 var Utils;
 (function (Utils) {
+    /** Breaks an array into groups of at most the given size. */
     function groupSize(items, size) {
         var output = [];
         var group = [];
@@ -16,49 +17,49 @@ var Utils;
         return output;
     }
     Utils.groupSize = groupSize;
+    function isNull(x) {
+        return !x;
+    }
+    Utils.isNull = isNull;
+    function isNotNull(x) {
+        return !!x;
+    }
+    Utils.isNotNull = isNotNull;
+    var matchFn = _(['matches', 'msMatchesSelector', 'webkitMatchesSelector', 'mozMatchesSelector']).map(function (fn) { return document.body[fn]; }).find(isNotNull);
     /**
-     * Get closest DOM element up the tree that contains a class, ID, or attribute
-     * @param  {Node} elem The base element
-     * @param  {String} selector The class, id, data attribute, or tag to look for
-     * @return {Node} Null if no match
+     * Navigates up the DOM element tree returning the first element that matches the given selector, including the given element.
+     * @param elem The base element
+     * @param selector The CSS selector to match on.
+     * @return Null if no match
      */
-    function getClosest(element, selector) {
-        var firstChar = selector.charAt(0);
+    function closest(element, selector) {
+        if (element['closest'])
+            return element['closest'](selector);
         for (var elem = element; elem && elem !== document; elem = elem.parentNode) {
-            // If selector is a class
-            if (firstChar === '.') {
-                if (elem.classList.contains(selector.substr(1))) {
-                    return elem;
-                }
-            }
-            // If selector is an ID
-            if (firstChar === '#') {
-                if (elem.id === selector.substr(1)) {
-                    return elem;
-                }
-            }
-            // If selector is an attribute
-            if (firstChar === '[') {
-                if (elem.hasAttribute(selector.substr(1, selector.length - 2))) {
-                    return elem;
-                }
-            }
-            // If selector is a tag
-            if (elem.tagName.toLowerCase() === selector) {
+            if (matchFn.call(elem, selector)) {
                 return elem;
             }
         }
         return null;
     }
-    Utils.getClosest = getClosest;
-    ;
+    Utils.closest = closest;
+    /** Returns the first child element that matches the given selector. */
+    function down(element, selector) {
+        return element.querySelector(selector);
+    }
+    Utils.down = down;
+    /** Returns all the descendants of the given element that match the given selector. */
+    function descendants(element, selector) {
+        return element.querySelectorAll(selector);
+    }
+    Utils.descendants = descendants;
     function fadesOut(callback, parentSelector) {
         return function (e) {
             //don't redraw yet
             m.redraw.strategy("none");
             var target = e.target;
             if (parentSelector) {
-                target = getClosest(target, parentSelector);
+                target = closest(target, parentSelector);
             }
             if (target) {
                 Velocity(target, { opacity: 0 }, {

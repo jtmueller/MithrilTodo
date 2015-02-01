@@ -54,6 +54,7 @@
     <TypeScriptCompile Include="Scripts\config.ts" />
     <TypeScriptCompile Include="Scripts\typings\firebase\firebase-simplelogin.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\firebase\firebase.d.ts" />
+    <TypeScriptCompile Include="Scripts\typings\lodash\lodash.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\mithril\mithril.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\velocity\velocity.d.ts" />
     <TypeScriptCompile Include="Scripts\utils.ts" />
@@ -168,6 +169,7 @@
     <TypeScriptSourceMap>true</TypeScriptSourceMap>
     <TypeScriptModuleKind>none</TypeScriptModuleKind>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <TypeScriptTarget>ES5</TypeScriptTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <TypeScriptRemoveComments>true</TypeScriptRemoveComments>

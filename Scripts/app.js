@@ -1,30 +1,37 @@
 var TodoApp;
 (function (TodoApp) {
+    var Modal = Bootstrap.Modal;
     //the controller defines what part of the model is relevant for the current page
     //in our case, there's only one view-model that handles everything
     var TodoController = (function () {
         function TodoController() {
+            this.init();
+            this.keyDownHandler = this.keyDownHandler.bind(this);
+            window.addEventListener('keydown', this.keyDownHandler);
+        }
+        TodoController.prototype.init = function () {
             var _this = this;
             TodoApp.Auth.init().then(function (authData) {
                 if (authData) {
                     m.startComputation();
                     _this.authData = authData;
                     _this.store = new TodoStore(_this.authData);
-                    _this.dialogController = new Bootstrap.Modal.ModalController();
+                    _this.dialogController = new Modal.ModalController();
                     _this.vm = new ViewModel(_this.store, _this.dialogController);
                     m.endComputation();
                 }
             }, function (err) { return console.error(err); });
-            window.addEventListener('keydown', this.keyDownHandler);
-        }
+        };
         TodoController.prototype.login = function (provider) {
             TodoApp.Auth.authenticate(provider);
         };
         TodoController.prototype.keyDownHandler = function (e) {
             if (e.shiftKey && e.ctrlKey && e.keyCode === 76) {
                 // user pressed ctrl+shift+L - log them out
+                this.authData = null;
+                this.store.unload();
                 TodoApp.Auth.logout();
-                document.location.reload();
+                this.init();
             }
         };
         TodoController.prototype.onunload = function (e) {
@@ -35,8 +42,6 @@ var TodoApp;
     })();
     TodoApp.TodoController = TodoController;
     function view(ctrl) {
-        if (!ctrl)
-            return null;
         if (!ctrl.authData) {
             return renderLoginBox(ctrl);
         }
@@ -46,7 +51,7 @@ var TodoApp;
         return m('.container.todoApp', [
             m('.row', m('.col-md-4.col-md-offset-4.col-xs-10.col-xs-offset-1', renderInputForm(vm))),
             m('.row', todoGroups.map(function (group) { return m('.col-lg-4', group.map(renderToDo.bind(undefined, vm))); })),
-            Bootstrap.Modal.view(ctrl.dialogController)
+            Modal.view(ctrl.dialogController)
         ]);
     }
     TodoApp.view = view;
@@ -57,8 +62,9 @@ var TodoApp;
     var ViewModel = (function () {
         function ViewModel(store, dialogController) {
             this.dialogController = dialogController;
-            this.list = store;
+            /** a slot to store the name of a new todo before it is created */
             this.description = m.prop('');
+            this.list = store;
             this.add = this.add.bind(this);
         }
         /** adds a todo to the list, and clears the description field for user convenience */
@@ -76,7 +82,7 @@ var TodoApp;
             var _this = this;
             var content = confirmDialog(description);
             this.dialogController.show(content).then(function (button) {
-                if (button === Bootstrap.Modal.Button.Yes) {
+                if (button === 2 /* Yes */) {
                     _this.list.remove(key);
                 }
             });
@@ -86,9 +92,12 @@ var TodoApp;
     var Todo = (function () {
         function Todo(text, completed, key) {
             if (completed === void 0) { completed = false; }
-            this.text = m.prop(text);
-            this.completed = m.prop(completed);
-            this.key = key;
+            this.text = m.prop('');
+            this.completed = m.prop(false);
+            this.key = m.prop();
+            this.text(text);
+            this.completed(completed);
+            this.key(key);
         }
         Todo.prototype.toJSON = function () {
             return {
@@ -127,25 +136,26 @@ var TodoApp;
             this.ref.child(key).remove();
         };
         TodoStore.prototype.update = function (item) {
-            this.ref.child(item.key).update(item.toJSON());
+            this.ref.child(item.key()).update(item.toJSON());
         };
         TodoStore.prototype.unload = function () {
-            this.ref.off('value');
-            this.ref = null;
+            if (this.ref) {
+                this.ref.off('value');
+                this.ref = null;
+            }
         };
         return TodoStore;
     })();
-    var Modal = Bootstrap.Modal;
     function confirmDialog(description) {
         return {
             title: 'Delete Task?',
             buttons: [{
                 text: 'Yes',
-                value: Modal.Button.Yes,
+                value: 2 /* Yes */,
                 primary: true
             }, {
                 text: 'No',
-                value: Modal.Button.No
+                value: 3 /* No */
             }],
             content: function () { return m('.confirmDlg', [
                 'Are you sure you want to permanently delete this task?',
@@ -166,10 +176,10 @@ var TodoApp;
         ]);
     }
     function renderToDo(vm, task) {
-        return m('.panel.panel-default', { key: task.key }, m('.panel-body', [
+        return m('.panel.panel-default', { key: task.key() }, m('.panel-body', [
             m('.col-xs-2', m('.checkbox', m('label', [
                 m('input[type=checkbox]', {
-                    id: 'todo_' + task.key,
+                    id: 'todo_' + task.key(),
                     onclick: function (e) {
                         task.completed(e.target.checked);
                         vm.update(task);
@@ -179,11 +189,11 @@ var TodoApp;
                 m('span.ripple'),
                 m('span.check')
             ]))),
-            m('.col-xs-8', m("label.todo" + (task.completed() ? '.completed' : ''), {
-                htmlFor: 'todo_' + task.key,
+            m('.col-xs-8', m('label.todo' + (task.completed() ? '.completed' : ''), {
+                htmlFor: 'todo_' + task.key(),
             }, task.text())),
             m('.col-xs-2', m('.icon-close', m('i.mdi-content-clear.close', {
-                onclick: vm.remove.bind(vm, task.key, task.text()) // Utils.fadesOut(vm.remove.bind(vm, task.key), '.panel')
+                onclick: vm.remove.bind(vm, task.key(), task.text()) // Utils.fadesOut(vm.remove.bind(vm, task.key), '.panel')
             })))
         ]));
     }
@@ -191,7 +201,7 @@ var TodoApp;
         return m('.container.todoApp', m('.row', m('.col-md-4.col-md-offset-4.col-xs-10.col-xs-offset-1', m('.authBox.well', [
             m('.row', m('.col-xs-10.col-xs-offset-1', m('h3', 'Mithril Todo'))),
             m('.row', m('.col-xs-10.col-xs-offset-1', 'Please log in to access your private to-do list.')),
-            m('.row', m('button.google.btn.btn-raised.btn-material-red-600[type=button]', { onclick: ctrl.login.bind(ctrl, TodoApp.AuthProvider.google) }, ['Google', m('.ripple-wrapper')]))
+            m('.row', m('button.google.btn.btn-raised.btn-material-red-600[type=button]', { onclick: ctrl.login.bind(ctrl, 0 /* google */) }, ['Google', m('.ripple-wrapper')]))
         ]))));
     }
     TodoApp.Module = {

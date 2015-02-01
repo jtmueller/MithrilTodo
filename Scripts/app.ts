@@ -1,26 +1,31 @@
 ﻿module TodoApp {
+	import Modal = Bootstrap.Modal;
 
     //the controller defines what part of the model is relevant for the current page
     //in our case, there's only one view-model that handles everything
     export class TodoController {
         vm: ViewModel;
         store: TodoStore;
-        dialogController: Bootstrap.Modal.ModalController;
+        dialogController: Modal.ModalController;
         authData: FirebaseAuthData;
 
         constructor() {
+            this.init();
+            this.keyDownHandler = this.keyDownHandler.bind(this);
+            window.addEventListener('keydown', this.keyDownHandler);
+        }
+
+        private init() {
             Auth.init().then(authData => {
                 if (authData) {
                     m.startComputation();
                     this.authData = authData;
                     this.store = new TodoStore(this.authData);
-                    this.dialogController = new Bootstrap.Modal.ModalController()
+                    this.dialogController = new Modal.ModalController()
                     this.vm = new ViewModel(this.store, this.dialogController);
                     m.endComputation();
                 }
             }, err => console.error(err));
-
-            window.addEventListener('keydown', this.keyDownHandler);
         }
 
         login(provider: AuthProvider) {
@@ -30,8 +35,10 @@
         private keyDownHandler(e) {
             if (e.shiftKey && e.ctrlKey && e.keyCode === 76) {
                 // user pressed ctrl+shift+L - log them out
+                this.authData = null;
+                this.store.unload();
                 Auth.logout();
-                document.location.reload();
+                this.init();
             }
         }
 
@@ -42,7 +49,6 @@
     }
 
     export function view(ctrl: TodoController) {
-        if (!ctrl) return null;
         if (!ctrl.authData) {
             return renderLoginBox(ctrl);
         }
@@ -60,7 +66,7 @@
             m('.row', todoGroups.map(group =>
                 m('.col-lg-4', group.map(renderToDo.bind(undefined, vm))))
             ),
-            Bootstrap.Modal.view(ctrl.dialogController)
+            Modal.view(ctrl.dialogController)
         ]);
     }
 
@@ -72,11 +78,10 @@
         /** a running list of todos */
         list: TodoStore;
         /** a slot to store the name of a new todo before it is created */
-        description: (value?: string) => string;
+        description = m.prop('');
 
-        constructor(store: TodoStore, private dialogController: Bootstrap.Modal.ModalController) {
+        constructor(store: TodoStore, private dialogController: Modal.ModalController) {
             this.list = store;
-            this.description = m.prop('');
             this.add = this.add.bind(this);
         }
 
@@ -96,12 +101,12 @@
         remove(key: string, description: string) {
             var content = confirmDialog(description);
 
-            this.dialogController.show<Bootstrap.Modal.Button>(content)
+            this.dialogController.show<Modal.Button>(content)
                 .then(button => {
-                if (button === Bootstrap.Modal.Button.Yes) {
-                    this.list.remove(key);
-                }
-            });
+					if (button === Modal.Button.Yes) {
+						this.list.remove(key);
+					}
+				});
         }
     }
 
@@ -111,14 +116,14 @@
     }
 
     class Todo {
-        text: (value?: string) => string;
-        completed: (value?: boolean) => boolean;
-        key: string;
+        text = m.prop('');
+        completed = m.prop(false);
+        key = m.prop<string>();
 
         constructor(text: string, completed = false, key?: string) {
-            this.text = m.prop(text);
-            this.completed = m.prop(completed);
-            this.key = key;
+            this.text(text);
+            this.completed(completed);
+            this.key(key);
         }
 
         toJSON(): TodoData {
@@ -167,19 +172,19 @@
 
         update(item: Todo) {
             this.ref
-                .child(item.key)
+                .child(item.key())
                 .update(item.toJSON());
         }
 
         unload() {
-            this.ref.off('value');
-            this.ref = null;
+            if (this.ref) {
+                this.ref.off('value');
+                this.ref = null;
+            }
         }
     }
 
-    var Modal = Bootstrap.Modal;
-
-    function confirmDialog(description: string): Bootstrap.Modal.ModalOptions {
+    function confirmDialog(description: string): Modal.ModalOptions {
         return {
             title: 'Delete Task?',
             buttons: [{
@@ -213,13 +218,13 @@
     }
 
     function renderToDo(vm: ViewModel, task: Todo) {
-        return m('.panel.panel-default', { key: task.key },
+        return m('.panel.panel-default', { key: task.key() },
             m('.panel-body', [
                 m('.col-xs-2',
                     m('.checkbox',
                         m('label', [
                             m('input[type=checkbox]', {
-                                id: 'todo_' + task.key,
+                                id: 'todo_' + task.key(),
                                 onclick: e => {
                                     task.completed(e.target.checked);
                                     vm.update(task);
@@ -232,14 +237,14 @@
                     )
                 ),
                 m('.col-xs-8',
-                    m(`label.todo${ task.completed() ? '.completed' : '' }`, {
-                        htmlFor: 'todo_' + task.key,
+                    m('label.todo' + (task.completed() ? '.completed' : ''), {
+                        htmlFor: 'todo_' + task.key(),
                     }, task.text())
                 ),
                 m('.col-xs-2',
                     m('.icon-close', 
                         m('i.mdi-content-clear.close', {
-                            onclick: vm.remove.bind(vm, task.key, task.text())  // Utils.fadesOut(vm.remove.bind(vm, task.key), '.panel')
+                            onclick: vm.remove.bind(vm, task.key(), task.text())  // Utils.fadesOut(vm.remove.bind(vm, task.key), '.panel')
                         })
                     )
                 )
