@@ -1,12 +1,18 @@
 ﻿module Utils {
 
+	export interface IEachable<T> {
+		forEach: (fn: (item: T) => void) => void;
+		length: number;
+	}
+
 	/** Breaks an array into groups of at most the given size. */
-    export function groupSize<T>(items: T[], size: number) {
+    export function groupSize<T>(items: IEachable<T>, groupSize: number) {
         var output: T[][] = [];
         var group: T[] = [];
+		var i = 0;
 
-        items.forEach((item, i) => {
-            if (i > 0 && i % size === 0) {
+        items.forEach(item => {
+            if (i > 0 && i % groupSize === 0) {
                 output.push(group);
                 group = [];
             }
@@ -14,6 +20,7 @@
             if (i === items.length - 1) {
                 output.push(group);
             }
+			i++;
         });
 
         return output;

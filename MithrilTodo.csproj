@@ -45,6 +45,9 @@
     <Content Include="Scripts\lib\mithril.min.js">
       <DependentUpon>mithril.js</DependentUpon>
     </Content>
+	<Content Include="Scripts\mithrilFire.js">
+	  <DependentUpon>mithrilFire.ts</DependentUpon>
+	</Content>
     <Content Include="Scripts\utils.js">
       <DependentUpon>utils.ts</DependentUpon>
     </Content>
@@ -55,6 +58,7 @@
     <TypeScriptCompile Include="Scripts\auth.ts" />
     <TypeScriptCompile Include="Scripts\bootstrap-modal.ts" />
     <TypeScriptCompile Include="Scripts\config.ts" />
+    <TypeScriptCompile Include="Scripts\mithrilFire.ts" />
     <TypeScriptCompile Include="Scripts\typings\firebase\firebase-simplelogin.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\firebase\firebase.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\lodash\lodash.d.ts" />

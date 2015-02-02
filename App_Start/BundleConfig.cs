@@ -29,6 +29,7 @@ namespace MithrilTodo
             bundles.Add(new ScriptBundle("~/bundles/script").Include(
                 "~/Scripts/config.js",
                 "~/Scripts/utils.js",
+				"~/Scripts/mithrilFire.js",
                 "~/Scripts/bootstrap-modal.js",
                 "~/Scripts/auth.js",
                 // app goes last

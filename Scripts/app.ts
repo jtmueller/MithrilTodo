@@ -5,7 +5,7 @@
     //in our case, there's only one view-model that handles everything
     export class TodoController {
         vm: ViewModel;
-        store: TodoStore;
+        store: MithrilFireStore<Todo>;
         dialogController: Modal.ModalController;
         authData: FirebaseAuthData;
 
@@ -20,7 +20,8 @@
                 if (authData) {
                     m.startComputation();
                     this.authData = authData;
-                    this.store = new TodoStore(this.authData);
+					var ref = new Firebase(`${Config.firebaseUrl}/users/${authData.uid}/todos`);
+                    this.store = new MithrilFireStore<Todo>(ref.limitToLast(100), x => Todo.fromJSON(x.val(), x.key()));
                     this.dialogController = new Modal.ModalController()
                     this.vm = new ViewModel(this.store, this.dialogController);
                     m.endComputation();
@@ -36,14 +37,14 @@
             if (e.shiftKey && e.ctrlKey && e.keyCode === 76) {
                 // user pressed ctrl+shift+L - log them out
                 this.authData = null;
-                this.store.unload();
+                this.store.dispose();
                 Auth.logout();
                 this.init();
             }
         }
 
         onunload(e) {
-            this.store.unload();
+            this.store.dispose();
             window.removeEventListener('keydown', this.keyDownHandler);
         }
     }
@@ -54,8 +55,7 @@
         }
 
         var vm = ctrl.vm;
-        var items = vm.list.getItems();
-        var todoGroups = Utils.groupSize(items, 5);
+        var todoGroups = Utils.groupSize(vm.list, 5);
 
         return m('.container.todoApp', [
             m('.row',
@@ -75,13 +75,10 @@
     //and takes care of the logic surrounding when adding is permitted
     //and clearing the input after adding a todo to the list
     class ViewModel {
-        /** a running list of todos */
-        list: TodoStore;
         /** a slot to store the name of a new todo before it is created */
         description = m.prop('');
 
-        constructor(store: TodoStore, private dialogController: Modal.ModalController) {
-            this.list = store;
+        constructor(public list: MithrilFireStore<Todo>, private dialogController: Modal.ModalController) {
             this.add = this.add.bind(this);
         }
 
@@ -95,7 +92,7 @@
         }
 
         update(item: Todo) {
-            this.list.update(item);
+            this.list.update(item.key(), item);
         }
 
         remove(key: string, description: string) {
@@ -135,53 +132,6 @@
 
         static fromJSON(data: TodoData, key: string) {
             return new Todo(data.text, data.completed, key);
-        }
-    }
-
-    class TodoStore {
-		// TODO: https://gist.github.com/webcss/5d59d15fb07204c7d732#file-mithrilfire-js
-        private ref: Firebase;
-        private todos: Todo[];
-
-        constructor(private authData: FirebaseAuthData) {
-            this.todos = [];
-            this.ref = new Firebase(`${Config.firebaseUrl}/users/${authData.uid}/todos`);
-            this.ref.on('value', data => {
-                this.todos = [];
-                data.forEach(x => {
-                    // TODO: use more granular events for better efficiency
-                    this.todos.push(Todo.fromJSON(x.val(), x.key()));
-                });
-                m.redraw();
-            });
-        }
-
-        getItems() {
-            return this.todos;
-        }
-
-        push(item: Todo) {
-            var newItem = this.ref.push();
-            newItem.set(item.toJSON());
-        }
-
-        remove(key: string) {
-            this.ref
-                .child(key)
-                .remove();
-        }
-
-        update(item: Todo) {
-            this.ref
-                .child(item.key())
-                .update(item.toJSON());
-        }
-
-        unload() {
-            if (this.ref) {
-                this.ref.off('value');
-                this.ref = null;
-            }
         }
     }
 

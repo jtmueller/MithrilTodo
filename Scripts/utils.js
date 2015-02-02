@@ -1,11 +1,12 @@
 var Utils;
 (function (Utils) {
     /** Breaks an array into groups of at most the given size. */
-    function groupSize(items, size) {
+    function groupSize(items, groupSize) {
         var output = [];
         var group = [];
-        items.forEach(function (item, i) {
-            if (i > 0 && i % size === 0) {
+        var i = 0;
+        items.forEach(function (item) {
+            if (i > 0 && i % groupSize === 0) {
                 output.push(group);
                 group = [];
             }
@@ -13,6 +14,7 @@ var Utils;
             if (i === items.length - 1) {
                 output.push(group);
             }
+            i++;
         });
         return output;
     }

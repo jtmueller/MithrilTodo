@@ -15,7 +15,8 @@ var TodoApp;
                 if (authData) {
                     m.startComputation();
                     _this.authData = authData;
-                    _this.store = new TodoStore(_this.authData);
+                    var ref = new Firebase("" + TodoApp.Config.firebaseUrl + "/users/" + authData.uid + "/todos");
+                    _this.store = new TodoApp.MithrilFireStore(ref.limitToLast(100), function (x) { return Todo.fromJSON(x.val(), x.key()); });
                     _this.dialogController = new Modal.ModalController();
                     _this.vm = new ViewModel(_this.store, _this.dialogController);
                     m.endComputation();
@@ -29,13 +30,13 @@ var TodoApp;
             if (e.shiftKey && e.ctrlKey && e.keyCode === 76) {
                 // user pressed ctrl+shift+L - log them out
                 this.authData = null;
-                this.store.unload();
+                this.store.dispose();
                 TodoApp.Auth.logout();
                 this.init();
             }
         };
         TodoController.prototype.onunload = function (e) {
-            this.store.unload();
+            this.store.dispose();
             window.removeEventListener('keydown', this.keyDownHandler);
         };
         return TodoController;
@@ -46,8 +47,7 @@ var TodoApp;
             return renderLoginBox(ctrl);
         }
         var vm = ctrl.vm;
-        var items = vm.list.getItems();
-        var todoGroups = Utils.groupSize(items, 5);
+        var todoGroups = Utils.groupSize(vm.list, 5);
         return m('.container.todoApp', [
             m('.row', m('.col-md-4.col-md-offset-4.col-xs-10.col-xs-offset-1', renderInputForm(vm))),
             m('.row', todoGroups.map(function (group) { return m('.col-lg-4', group.map(renderToDo.bind(undefined, vm))); })),
@@ -60,11 +60,11 @@ var TodoApp;
     //and takes care of the logic surrounding when adding is permitted
     //and clearing the input after adding a todo to the list
     var ViewModel = (function () {
-        function ViewModel(store, dialogController) {
+        function ViewModel(list, dialogController) {
+            this.list = list;
             this.dialogController = dialogController;
             /** a slot to store the name of a new todo before it is created */
             this.description = m.prop('');
-            this.list = store;
             this.add = this.add.bind(this);
         }
         /** adds a todo to the list, and clears the description field for user convenience */
@@ -76,7 +76,7 @@ var TodoApp;
             }
         };
         ViewModel.prototype.update = function (item) {
-            this.list.update(item);
+            this.list.update(item.key(), item);
         };
         ViewModel.prototype.remove = function (key, description) {
             var _this = this;
@@ -109,42 +109,6 @@ var TodoApp;
             return new Todo(data.text, data.completed, key);
         };
         return Todo;
-    })();
-    var TodoStore = (function () {
-        function TodoStore(authData) {
-            var _this = this;
-            this.authData = authData;
-            this.todos = [];
-            this.ref = new Firebase("" + TodoApp.Config.firebaseUrl + "/users/" + authData.uid + "/todos");
-            this.ref.on('value', function (data) {
-                _this.todos = [];
-                data.forEach(function (x) {
-                    // TODO: use more granular events for better efficiency
-                    _this.todos.push(Todo.fromJSON(x.val(), x.key()));
-                });
-                m.redraw();
-            });
-        }
-        TodoStore.prototype.getItems = function () {
-            return this.todos;
-        };
-        TodoStore.prototype.push = function (item) {
-            var newItem = this.ref.push();
-            newItem.set(item.toJSON());
-        };
-        TodoStore.prototype.remove = function (key) {
-            this.ref.child(key).remove();
-        };
-        TodoStore.prototype.update = function (item) {
-            this.ref.child(item.key()).update(item.toJSON());
-        };
-        TodoStore.prototype.unload = function () {
-            if (this.ref) {
-                this.ref.off('value');
-                this.ref = null;
-            }
-        };
-        return TodoStore;
     })();
     function confirmDialog(description) {
         return {
