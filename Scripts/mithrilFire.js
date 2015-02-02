@@ -7,47 +7,50 @@ var TodoApp;
             this.data = [];
             this.convert = converter || (function (x) { return x.val(); });
             this.ref = query.ref();
-            this.query.on('child_added', function (data) {
-                m.startComputation();
-                var item = _this.convert(data);
-                _this.data.push(item);
-                m.endComputation();
-            });
-            this.query.on('child_removed', function (snapshot) {
-                m.startComputation();
-                var key = snapshot.key();
-                _.remove(_this.data, function (x) { return x.key() === key; });
-                m.endComputation();
-            });
-            this.query.on('child_changed', function (snapshot) {
-                m.startComputation();
-                var newItem = _this.convert(snapshot);
-                var itemIndex = _.findIndex(_this.data, function (x) { return x.key() === newItem.key(); });
-                if (itemIndex !== -1) {
-                    _this.data[itemIndex] = newItem;
-                }
-                m.endComputation();
-            });
-            this.query.on('child_moved', function (snapshot, prevKey) {
-                console.log('child_moved', snapshot, prevKey);
-                m.startComputation();
-                var thisKey = snapshot.key();
-                var removed = _.remove(_this.data, function (x) { return x.key() === thisKey; });
-                if (removed.length === 0)
-                    return;
-                if (prevKey) {
-                    var prevIndex = _.findIndex(_this.data, function (x) { return x.key() === prevKey; });
-                    if (prevIndex === -1)
-                        _this.data.push(removed[0]);
-                    else
-                        _this.data.splice(prevIndex, 0, removed[0]);
-                }
-                else {
-                    _this.data.unshift(removed[0]);
-                }
-                m.endComputation();
-            });
+            this.query.on('child_added', function (x) { return _this.handleChildAdded(x); });
+            this.query.on('child_removed', function (x) { return _this.handleChildRemoved(x); });
+            this.query.on('child_changed', function (x) { return _this.handleChildChanged(x); });
+            this.query.on('child_moved', function (s, k) { return _this.handleChildMoved(s, k); });
         }
+        MithrilFireStore.prototype.handleChildAdded = function (snapshot) {
+            m.startComputation();
+            var item = this.convert(snapshot);
+            this.data.push(item);
+            m.endComputation();
+        };
+        MithrilFireStore.prototype.handleChildRemoved = function (snapshot) {
+            m.startComputation();
+            var key = snapshot.key();
+            _.remove(this.data, function (x) { return x.key() === key; });
+            m.endComputation();
+        };
+        MithrilFireStore.prototype.handleChildChanged = function (snapshot) {
+            m.startComputation();
+            var newItem = this.convert(snapshot);
+            var itemIndex = _.findIndex(this.data, function (x) { return x.key() === newItem.key(); });
+            if (itemIndex !== -1) {
+                this.data[itemIndex] = newItem;
+            }
+            m.endComputation();
+        };
+        MithrilFireStore.prototype.handleChildMoved = function (snapshot, prevKey) {
+            m.startComputation();
+            var thisKey = snapshot.key();
+            var removed = _.remove(this.data, function (x) { return x.key() === thisKey; });
+            if (removed.length === 0)
+                return;
+            if (prevKey) {
+                var prevIndex = _.findIndex(this.data, function (x) { return x.key() === prevKey; });
+                if (prevIndex === -1)
+                    this.data.push(removed[0]);
+                else
+                    this.data.splice(prevIndex, 0, removed[0]);
+            }
+            else {
+                this.data.unshift(removed[0]);
+            }
+            m.endComputation();
+        };
         Object.defineProperty(MithrilFireStore.prototype, "length", {
             get: function () {
                 return this.data.length;

@@ -13,49 +13,54 @@
             this.convert = converter || (x => <T>x.val());
             this.ref = query.ref();
 
-            this.query.on('child_added', data => {
-                m.startComputation();
-                var item = this.convert(data);
-                this.data.push(item);
-                m.endComputation();
-            });
+            this.query.on('child_added', x => this.handleChildAdded(x));
+            this.query.on('child_removed', x => this.handleChildRemoved(x));
+            this.query.on('child_changed', x => this.handleChildChanged(x));
+            this.query.on('child_moved', (s, k) => this.handleChildMoved(s, k));
+        }
 
-            this.query.on('child_removed', snapshot => {
-                m.startComputation();
-                var key = snapshot.key();
-                _.remove(this.data, (x: T) => x.key() === key);
-                m.endComputation();
-            });
+        private handleChildAdded(snapshot: FirebaseDataSnapshot) {
+            m.startComputation();
+            var item = this.convert(snapshot);
+            this.data.push(item);
+            m.endComputation();
+        }
 
-            this.query.on('child_changed', snapshot => {
-                m.startComputation();
-                var newItem = this.convert(snapshot);
-                var itemIndex = _.findIndex(this.data, x => x.key() === newItem.key());
-                if (itemIndex !== -1) {
-                    this.data[itemIndex] = newItem;
-                }
-                m.endComputation();
-            });
+        private handleChildRemoved(snapshot: FirebaseDataSnapshot) {
+            m.startComputation();
+            var key = snapshot.key();
+            _.remove(this.data, (x: T) => x.key() === key);
+            m.endComputation();
+        }
 
-            this.query.on('child_moved', (snapshot: FirebaseDataSnapshot, prevKey: string) => {
-                console.log('child_moved', snapshot, prevKey);
-                m.startComputation();
-                var thisKey = snapshot.key();
-                var removed = _.remove(this.data, x => x.key() === thisKey);
-                if (removed.length === 0) return;
+        private handleChildChanged(snapshot: FirebaseDataSnapshot) {
+            m.startComputation();
+            var newItem = this.convert(snapshot);
+            var itemIndex = _.findIndex(this.data, x => x.key() === newItem.key());
+            if (itemIndex !== -1) {
+                this.data[itemIndex] = newItem;
+            }
+            m.endComputation();
+        }
 
-                if (prevKey) {
-                    var prevIndex = _.findIndex(this.data, x => x.key() === prevKey);
-                    if (prevIndex === -1)
-                        this.data.push(removed[0]);
-                    else
-                        this.data.splice(prevIndex, 0, removed[0]);
-                }
-                else {
-                    this.data.unshift(removed[0]);
-                }
-                m.endComputation();
-            });
+        private handleChildMoved(snapshot: FirebaseDataSnapshot, prevKey: string) {
+            //console.log('child_moved', snapshot, prevKey);
+            m.startComputation();
+            var thisKey = snapshot.key();
+            var removed = _.remove(this.data, x => x.key() === thisKey);
+            if (removed.length === 0) return;
+
+            if (prevKey) {
+                var prevIndex = _.findIndex(this.data, x => x.key() === prevKey);
+                if (prevIndex === -1)
+                    this.data.push(removed[0]);
+                else
+                    this.data.splice(prevIndex, 0, removed[0]);
+            }
+            else {
+                this.data.unshift(removed[0]);
+            }
+            m.endComputation();
         }
 
         get length() {
