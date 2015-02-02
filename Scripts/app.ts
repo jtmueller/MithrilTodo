@@ -36,10 +36,12 @@
         private keyDownHandler(e) {
             if (e.shiftKey && e.ctrlKey && e.keyCode === 76) {
                 // user pressed ctrl+shift+L - log them out
+                m.startComputation();
                 this.authData = null;
                 this.store.dispose();
                 Auth.logout();
                 this.init();
+                m.endComputation();
             }
         }
 

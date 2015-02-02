@@ -26,10 +26,12 @@ var TodoApp;
         };
         TodoController.prototype.keyDownHandler = function (e) {
             if (e.shiftKey && e.ctrlKey && e.keyCode === 76) {
+                m.startComputation();
                 this.authData = null;
                 this.store.dispose();
                 TodoApp.Auth.logout();
                 this.init();
+                m.endComputation();
             }
         };
         TodoController.prototype.onunload = function (e) {

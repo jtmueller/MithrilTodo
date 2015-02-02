@@ -37,6 +37,8 @@
 
         export function logout() {
             if (ref) ref.unauth();
+            loginHandle.reject(new Error('Log-out requested.'));
+            loginHandle = m.deferred<FirebaseAuthData>();
         }
     }
 }
