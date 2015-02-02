@@ -67,19 +67,19 @@
     }
 
     class ModalViewModel {
-		render = m.prop(false);
-		visible = m.prop(false);
-		title = m.prop('');
-		contentView: ModalContentView = () => null;
-		buttons: ModalButton[] = [];
+        render = m.prop(false);
+        visible = m.prop(false);
+        title = m.prop('');
+        contentView: ModalContentView = () => null;
+        buttons: ModalButton[] = [];
 
         show(opts: ModalOptions) {
             m.startComputation();
             this.title(opts.title);
             this.contentView = opts.content;
             this.buttons = opts.buttons || [];
-			this.render(true);
-			this.visible(false);
+            this.render(true);
+            this.visible(false);
             m.endComputation();
 
             setTimeout(() => {

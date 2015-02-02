@@ -1,15 +1,15 @@
 ﻿module Utils {
 
-	export interface IEachable<T> {
-		forEach: (fn: (item: T) => void) => void;
-		length: number;
-	}
+    export interface IEachable<T> {
+        forEach: (fn: (item: T) => void) => void;
+        length: number;
+    }
 
-	/** Breaks an array into groups of at most the given size. */
+    /** Breaks an array into groups of at most the given size. */
     export function groupSize<T>(items: IEachable<T>, groupSize: number) {
         var output: T[][] = [];
         var group: T[] = [];
-		var i = 0;
+        var i = 0;
 
         items.forEach(item => {
             if (i > 0 && i % groupSize === 0) {
@@ -20,20 +20,20 @@
             if (i === items.length - 1) {
                 output.push(group);
             }
-			i++;
+            i++;
         });
 
         return output;
     }
 
-	export function isNull<T>(x: T) { return !x; }
+    export function isNull<T>(x: T) { return !x; }
 
-	export function isNotNull<T>(x: T) { return !!x; }
+    export function isNotNull<T>(x: T) { return !!x; }
 
-	var matchFn: (selector: string) => boolean =
-		_(['matches', 'msMatchesSelector', 'webkitMatchesSelector', 'mozMatchesSelector'])
-			.map(fn => document.body[fn])
-			.find(isNotNull);
+    var matchFn: (selector: string) => boolean =
+        _(['matches', 'msMatchesSelector', 'webkitMatchesSelector', 'mozMatchesSelector'])
+            .map(fn => document.body[fn])
+            .find(isNotNull);
 
     /**
      * Navigates up the DOM element tree returning the first element that matches the given selector, including the given element.
@@ -42,27 +42,27 @@
      * @return Null if no match
      */
     export function closest(element: HTMLElement, selector: string): HTMLElement {
-		if (element['closest'])
-			return element['closest'](selector);
+        if (element['closest'])
+            return element['closest'](selector);
 
         for (var elem: any = element; elem && elem !== document; elem = elem.parentNode) {
             if (matchFn.call(elem, selector)) {
-				return elem;
-			}
+                return elem;
+            }
         }
 
         return null;
     }
 
-	/** Returns the first child element that matches the given selector. */
-	export function down(element: HTMLElement, selector: string): HTMLElement {
-		return <HTMLElement>element.querySelector(selector);
-	}
+    /** Returns the first child element that matches the given selector. */
+    export function down(element: HTMLElement, selector: string): HTMLElement {
+        return <HTMLElement>element.querySelector(selector);
+    }
 
-	/** Returns all the descendants of the given element that match the given selector. */
-	export function descendants(element: HTMLElement, selector: string): NodeListOf<HTMLElement> {
-		return <NodeListOf<HTMLElement>>element.querySelectorAll(selector);
-	}
+    /** Returns all the descendants of the given element that match the given selector. */
+    export function descendants(element: HTMLElement, selector: string): NodeListOf<HTMLElement> {
+        return <NodeListOf<HTMLElement>>element.querySelectorAll(selector);
+    }
 
     export function fadesOut(callback: Function, parentSelector?: string) {
         return (e:Event) => {
@@ -79,14 +79,14 @@
                     duration: 750,
                     complete: () => {
                         //now that the animation finished, redraw
-						m.startComputation();
+                        m.startComputation();
                         callback();
                         m.endComputation();
                     }
                 });
             } else {
                 // we couldn't find the target, so skip the animation
-				m.startComputation();
+                m.startComputation();
                 callback();
                 m.endComputation();
             }

@@ -1,5 +1,5 @@
 ﻿module TodoApp {
-	import Modal = Bootstrap.Modal;
+    import Modal = Bootstrap.Modal;
 
     //the controller defines what part of the model is relevant for the current page
     //in our case, there's only one view-model that handles everything
@@ -20,7 +20,7 @@
                 if (authData) {
                     m.startComputation();
                     this.authData = authData;
-					var ref = new Firebase(`${Config.firebaseUrl}/users/${authData.uid}/todos`);
+                    var ref = new Firebase(`${Config.firebaseUrl}/users/${authData.uid}/todos`);
                     this.store = new MithrilFireStore<Todo>(ref.limitToLast(100), x => Todo.fromJSON(x.val(), x.key()));
                     this.dialogController = new Modal.ModalController()
                     this.vm = new ViewModel(this.store, this.dialogController);
@@ -100,10 +100,10 @@
 
             this.dialogController.show<Modal.Button>(content)
                 .then(button => {
-					if (button === Modal.Button.Yes) {
-						this.list.remove(key);
-					}
-				});
+                    if (button === Modal.Button.Yes) {
+                        this.list.remove(key);
+                    }
+                });
         }
     }
 
