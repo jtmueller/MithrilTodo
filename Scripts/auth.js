@@ -18,7 +18,6 @@ var TodoApp;
                     if (authData) {
                         authData.token = null;
                         loginHandle.resolve(authData);
-                        //console.log('Authenticated: ', authData);
                         ref.child("/users/" + authData.uid).update(authData);
                     }
                 });
@@ -42,4 +41,3 @@ var TodoApp;
         Auth.logout = logout;
     })(Auth = TodoApp.Auth || (TodoApp.Auth = {}));
 })(TodoApp || (TodoApp = {}));
-//# sourceMappingURL=auth.js.map

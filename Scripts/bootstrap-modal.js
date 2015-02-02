@@ -65,7 +65,6 @@ var Bootstrap;
                 this.visible(false);
                 m.endComputation();
                 setTimeout(function () {
-                    // this allows for CSS animations to fade-in on the element
                     _this.visible(true);
                     m.redraw();
                 }, 16);
@@ -73,12 +72,10 @@ var Bootstrap;
             ModalViewModel.prototype.hide = function () {
                 var _this = this;
                 this.visible(false);
-                //m.redraw();
                 setTimeout(function () {
-                    // this allows for CSS animations to fade-out the element before it's removed from the dom
                     _this.render(false);
                     m.redraw();
-                }, 250); // css animation lasts 0.15 seconds, or 200ms
+                }, 250);
             };
             return ModalViewModel;
         })();
@@ -94,4 +91,3 @@ var Bootstrap;
         };
     })(Modal = Bootstrap.Modal || (Bootstrap.Modal = {}));
 })(Bootstrap || (Bootstrap = {}));
-//# sourceMappingURL=bootstrap-modal.js.map

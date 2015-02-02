@@ -1,80 +1,85 @@
 ﻿module TodoApp {
-	export class MithrilFireStore<T> {
+	export interface IFireKey {
+		/** Sets or returns the Firebase token for the item. */
+		key: (value?: string) => string;
+	}
+
+	export class MithrilFireStore<T extends IFireKey> {
+		private data: T[] = [];
 		private ref: Firebase;
-		private data: FirebaseDataSnapshot;
 		private convert: (value: FirebaseDataSnapshot) => T;
 
 		constructor(private query: FirebaseQuery, converter?: (value: FirebaseDataSnapshot) => T) {
-			this.ref = query.ref();
 			this.convert = converter || (x => <T>x.val());
+			this.ref = query.ref();
 
-			// TODO: instead of value use child_added, child_removed, child_changed events, local cache?
-			this.query.on('value', data => {
-				this.data = data;
-				m.redraw();
+			this.query.on('child_added', data => {
+				m.startComputation();
+				var item = this.convert(data);
+				this.data.push(item);
+				m.endComputation();
+			});
+
+			this.query.on('child_removed', snapshot => {
+				m.startComputation();
+				var key = snapshot.key();
+				_.remove(this.data, (x: T) => x.key() === key);
+				m.endComputation();
+			});
+
+			this.query.on('child_changed', snapshot => {
+				m.startComputation();
+				var newItem = this.convert(snapshot);
+				var itemIndex = _.findIndex(this.data, x => x.key() === newItem.key());
+				if (itemIndex !== -1) {
+					this.data[itemIndex] = newItem;
+				}
+				m.endComputation();
+			});
+
+			this.query.on('child_moved', (snapshot: FirebaseDataSnapshot, prevKey: string) => {
+				console.log('child_moved', snapshot, prevKey);
+				m.startComputation();
+				var thisKey = snapshot.key();
+				var removed = _.remove(this.data, x => x.key() === thisKey);
+				if (removed.length === 0) return;
+
+				if (prevKey) {
+					var prevIndex = _.findIndex(this.data, x => x.key() === prevKey);
+					if (prevIndex === -1)
+						this.data.push(removed[0]);
+					else
+						this.data.splice(prevIndex, 0, removed[0]);
+				}
+				else {
+					this.data.unshift(removed[0]);
+				}
+				m.endComputation();
 			});
 		}
 
 		get length() {
-			if (this.data)
-				return this.data.numChildren();
-			return 0;
+			return this.data.length;
 		}
 
 		asArray(): T[] {
-			var out: T[] = [];
-			if (!this.data)
-				return out;
-
-			this.data.forEach(item => {
-				var value = this.convert(item);
-				out.push(value);
-			});
-
-			return out;
+			return this.data;
 		}
 
-		filter(predicate: (item:T) => boolean) {
-			var out: T[] = [];
-			if (!this.data)
-				return out;
-
-			this.data.forEach(item => {
-				var value = this.convert(item);
-				if (predicate(value)) {
-					out.push(value);
-				}
-			});
-
-			return out;
+		filter(predicate: (item: T) => boolean) {
+			return _.filter(this.data, predicate);
 		}
 
-		forEach(fn: (item:T) => void) {
-			if (!this.data) return;
-			this.data.forEach(x => fn(this.convert(x)));
+		forEach(fn: (item: T) => void) {
+			return _.forEach(this.data, fn);
 		}
 
 		map<R>(fn: (item: T) => R): R[]{
-			var out: R[] = [];
-
-			this.data.forEach(item => {
-				out.push(fn(this.convert(item)));
-			});
-
-			return out;
+			return _.map(this.data, fn);
 		}
 
-		reduce<R>(fn: (accumulator:R, item:T, key?:string, data?:FirebaseDataSnapshot) => R, initValue:R) {
-			if (!this.data) return initValue;
-			var val = initValue;
-			this.data.forEach(item => {
-				val = fn(val, this.convert(item), item.key(), this.data);
-			});
-			return val;
-		}
-
-		snapshot() {
-			return this.data;
+		reduce<R>(fn: (acc:R, item:T, key?:any, data?:T[]) => R, initValue?:R) {
+			return _.reduce<T, R>(this.data, fn, initValue);
 		}
 
 		push(item: T, priority?: number|string) {
@@ -134,7 +139,10 @@
 
 		dispose() {
 			if (this.query) {
-				this.query.off('value');
+				this.query.off('child_added');
+				this.query.off('child_removed');
+				this.query.off('child_changed');
+				this.query.off('child_moved');
 				this.query = null;
 			}
 			this.data = null;

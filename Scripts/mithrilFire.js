@@ -4,73 +4,71 @@ var TodoApp;
         function MithrilFireStore(query, converter) {
             var _this = this;
             this.query = query;
-            this.ref = query.ref();
+            this.data = [];
             this.convert = converter || (function (x) { return x.val(); });
-            // TODO: instead of value use child_added, child_removed, child_changed events, local cache?
-            this.query.on('value', function (data) {
-                _this.data = data;
-                m.redraw();
+            this.ref = query.ref();
+            this.query.on('child_added', function (data) {
+                m.startComputation();
+                var item = _this.convert(data);
+                _this.data.push(item);
+                m.endComputation();
+            });
+            this.query.on('child_removed', function (snapshot) {
+                m.startComputation();
+                var key = snapshot.key();
+                _.remove(_this.data, function (x) { return x.key() === key; });
+                m.endComputation();
+            });
+            this.query.on('child_changed', function (snapshot) {
+                m.startComputation();
+                var newItem = _this.convert(snapshot);
+                var itemIndex = _.findIndex(_this.data, function (x) { return x.key() === newItem.key(); });
+                if (itemIndex !== -1) {
+                    _this.data[itemIndex] = newItem;
+                }
+                m.endComputation();
+            });
+            this.query.on('child_moved', function (snapshot, prevKey) {
+                console.log('child_moved', snapshot, prevKey);
+                m.startComputation();
+                var thisKey = snapshot.key();
+                var removed = _.remove(_this.data, function (x) { return x.key() === thisKey; });
+                if (removed.length === 0)
+                    return;
+                if (prevKey) {
+                    var prevIndex = _.findIndex(_this.data, function (x) { return x.key() === prevKey; });
+                    if (prevIndex === -1)
+                        _this.data.push(removed[0]);
+                    else
+                        _this.data.splice(prevIndex, 0, removed[0]);
+                }
+                else {
+                    _this.data.unshift(removed[0]);
+                }
+                m.endComputation();
             });
         }
         Object.defineProperty(MithrilFireStore.prototype, "length", {
             get: function () {
-                if (this.data)
-                    return this.data.numChildren();
-                return 0;
+                return this.data.length;
             },
             enumerable: true,
             configurable: true
         });
         MithrilFireStore.prototype.asArray = function () {
-            var _this = this;
-            var out = [];
-            if (!this.data)
-                return out;
-            this.data.forEach(function (item) {
-                var value = _this.convert(item);
-                out.push(value);
-            });
-            return out;
+            return this.data;
         };
         MithrilFireStore.prototype.filter = function (predicate) {
-            var _this = this;
-            var out = [];
-            if (!this.data)
-                return out;
-            this.data.forEach(function (item) {
-                var value = _this.convert(item);
-                if (predicate(value)) {
-                    out.push(value);
-                }
-            });
-            return out;
+            return _.filter(this.data, predicate);
         };
         MithrilFireStore.prototype.forEach = function (fn) {
-            var _this = this;
-            if (!this.data)
-                return;
-            this.data.forEach(function (x) { return fn(_this.convert(x)); });
+            return _.forEach(this.data, fn);
         };
         MithrilFireStore.prototype.map = function (fn) {
-            var _this = this;
-            var out = [];
-            this.data.forEach(function (item) {
-                out.push(fn(_this.convert(item)));
-            });
-            return out;
+            return _.map(this.data, fn);
         };
         MithrilFireStore.prototype.reduce = function (fn, initValue) {
-            var _this = this;
-            if (!this.data)
-                return initValue;
-            var val = initValue;
-            this.data.forEach(function (item) {
-                val = fn(val, _this.convert(item), item.key(), _this.data);
-            });
-            return val;
-        };
-        MithrilFireStore.prototype.snapshot = function () {
-            return this.data;
+            return _.reduce(this.data, fn, initValue);
         };
         MithrilFireStore.prototype.push = function (item, priority) {
             var itemData = item['toJSON'] ? item['toJSON']() : item;
@@ -122,7 +120,10 @@ var TodoApp;
         };
         MithrilFireStore.prototype.dispose = function () {
             if (this.query) {
-                this.query.off('value');
+                this.query.off('child_added');
+                this.query.off('child_removed');
+                this.query.off('child_changed');
+                this.query.off('child_moved');
                 this.query = null;
             }
             this.data = null;
@@ -132,4 +133,3 @@ var TodoApp;
     })();
     TodoApp.MithrilFireStore = MithrilFireStore;
 })(TodoApp || (TodoApp = {}));
-//# sourceMappingURL=mithrilFire.js.map

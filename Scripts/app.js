@@ -1,8 +1,6 @@
 var TodoApp;
 (function (TodoApp) {
     var Modal = Bootstrap.Modal;
-    //the controller defines what part of the model is relevant for the current page
-    //in our case, there's only one view-model that handles everything
     var TodoController = (function () {
         function TodoController() {
             this.init();
@@ -28,7 +26,6 @@ var TodoApp;
         };
         TodoController.prototype.keyDownHandler = function (e) {
             if (e.shiftKey && e.ctrlKey && e.keyCode === 76) {
-                // user pressed ctrl+shift+L - log them out
                 this.authData = null;
                 this.store.dispose();
                 TodoApp.Auth.logout();
@@ -55,19 +52,13 @@ var TodoApp;
         ]);
     }
     TodoApp.view = view;
-    //the view-model tracks a running list of todos,
-    //stores a description for new todos before they are created
-    //and takes care of the logic surrounding when adding is permitted
-    //and clearing the input after adding a todo to the list
     var ViewModel = (function () {
         function ViewModel(list, dialogController) {
             this.list = list;
             this.dialogController = dialogController;
-            /** a slot to store the name of a new todo before it is created */
             this.description = m.prop('');
             this.add = this.add.bind(this);
         }
-        /** adds a todo to the list, and clears the description field for user convenience */
         ViewModel.prototype.add = function (e) {
             e.preventDefault();
             if (this.description()) {
@@ -157,7 +148,7 @@ var TodoApp;
                 htmlFor: 'todo_' + task.key(),
             }, task.text())),
             m('.col-xs-2', m('.icon-close', m('i.mdi-content-clear.close', {
-                onclick: vm.remove.bind(vm, task.key(), task.text()) // Utils.fadesOut(vm.remove.bind(vm, task.key, task.text()), '.panel')
+                onclick: vm.remove.bind(vm, task.key(), task.text())
             })))
         ]));
     }
@@ -173,6 +164,4 @@ var TodoApp;
         view: view
     };
 })(TodoApp || (TodoApp = {}));
-//initialize the application
 m.module(document.body, TodoApp.Module);
-//# sourceMappingURL=app.js.map
