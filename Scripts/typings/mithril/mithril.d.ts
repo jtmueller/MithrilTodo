@@ -8,8 +8,8 @@
 interface MithrilStatic {
     (selector: string, attributes: Object, children?: any): MithrilVirtualElement;
     (selector: string, children?: any): MithrilVirtualElement;
-    prop<T>(value?: T): (value?: T) => T;
-    prop<T>(promise: MithrilPromise<T>): MithrilPromiseProperty<T>;
+    prop<T>(value?: T): MithrilProp<T>;
+    prop<T>(promise: MithrilPromise<T>): MithrilPromise<T>;
     withAttr(property: string, callback: (value: any) => void): (e: Event) => any;
     module(rootElement: Node, module: MithrilModule): void;
     trust(html: string): String;
@@ -50,16 +50,13 @@ interface MithrilDeferred<T> {
     promise: MithrilPromise<T>;
 }
 
-interface MithrilPromise<T> {
+interface MithrilProp<T> {
     (value?: T): T;
-    then<R>(successCallback?: (value: T) => R, errorCallback?: (value: any) => any): MithrilPromise<R>;
-    then<R>(successCallback?: (value: T) => MithrilPromise<R>, errorCallback?: (value: any) => any): MithrilPromise<R>;
 }
 
-interface MithrilPromiseProperty<T> extends MithrilPromise<T> {
-    (): T;
-    (value: T): T;
-    toJSON(): T;
+interface MithrilPromise<T> extends MithrilProp<T> {
+    then<R>(successCallback?: (value: T) => R, errorCallback?: (value: any) => any): MithrilPromise<R>;
+    then<R>(successCallback?: (value: T) => MithrilPromise<R>, errorCallback?: (value: any) => any): MithrilPromise<R>;
 }
 
 interface MithrilXHROptions {
