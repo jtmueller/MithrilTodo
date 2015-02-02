@@ -139,6 +139,7 @@
     }
 
     class TodoStore {
+		// TODO: https://gist.github.com/webcss/5d59d15fb07204c7d732#file-mithrilfire-js
         private ref: Firebase;
         private todos: Todo[];
 
@@ -244,7 +245,7 @@
                 m('.col-xs-2',
                     m('.icon-close', 
                         m('i.mdi-content-clear.close', {
-                            onclick: vm.remove.bind(vm, task.key(), task.text())  // Utils.fadesOut(vm.remove.bind(vm, task.key), '.panel')
+                            onclick: vm.remove.bind(vm, task.key(), task.text())  // Utils.fadesOut(vm.remove.bind(vm, task.key, task.text()), '.panel')
                         })
                     )
                 )

@@ -38,8 +38,11 @@
     <Content Include="Scripts\config.js">
       <DependentUpon>config.ts</DependentUpon>
     </Content>
-    <Content Include="Scripts\mithril.js" />
-    <Content Include="Scripts\mithril.min.js">
+    <Content Include="Scripts\lib\es5-shim.js" />
+    <Content Include="Scripts\lib\firebase.js" />
+    <Content Include="Scripts\lib\lodash.js" />
+    <Content Include="Scripts\lib\mithril.js" />
+    <Content Include="Scripts\lib\mithril.min.js">
       <DependentUpon>mithril.js</DependentUpon>
     </Content>
     <Content Include="Scripts\utils.js">
@@ -77,7 +80,7 @@
     <Content Include="Scripts\config.js.map">
       <DependentUpon>config.ts</DependentUpon>
     </Content>
-    <Content Include="Scripts\mithril.min.js.map">
+    <Content Include="Scripts\lib\mithril.min.js.map">
       <DependentUpon>mithril.js</DependentUpon>
     </Content>
     <None Include="web.Debug.config">

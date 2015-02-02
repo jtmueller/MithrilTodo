@@ -193,7 +193,7 @@ var TodoApp;
                 htmlFor: 'todo_' + task.key(),
             }, task.text())),
             m('.col-xs-2', m('.icon-close', m('i.mdi-content-clear.close', {
-                onclick: vm.remove.bind(vm, task.key(), task.text()) // Utils.fadesOut(vm.remove.bind(vm, task.key), '.panel')
+                onclick: vm.remove.bind(vm, task.key(), task.text()) // Utils.fadesOut(vm.remove.bind(vm, task.key, task.text()), '.panel')
             })))
         ]));
     }
