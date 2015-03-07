@@ -65,8 +65,8 @@
                     renderInputForm(vm)
                 )
             ),
-            m('.row', todoGroups
-                .map(group =>
+            m('.row', 
+                todoGroups.map(group =>
                     m('.col-lg-4', _.map(group, renderToDo.bind(undefined, vm)))
                 ).value()
             ),
