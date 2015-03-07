@@ -49,7 +49,10 @@ var TodoApp;
         var todoGroups = _(vm.list.asArray()).chunk(5);
         return m('.container.todoApp', [
             m('.row', m('.col-md-4.col-md-offset-4.col-xs-10.col-xs-offset-1', renderInputForm(vm))),
-            m('.row', todoGroups.map(function (group) { return m('.col-lg-4', _.map(group, renderToDo.bind(undefined, vm))); }).value()),
+            m('.row', todoGroups.map(function (group) {
+                var renderItem = renderToDo.bind(undefined, vm);
+                return m('.col-lg-4', _.map(group, renderItem));
+            }).value()),
             Modal.view(ctrl.dialogController)
         ]);
     }

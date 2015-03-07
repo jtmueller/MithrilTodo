@@ -20,7 +20,7 @@ namespace MithrilTodo
             );
 
             bundles.Add(
-                new ScriptBundle("~/bundles/firebase", "//cdn.firebase.com/js/client/2.1.2/firebase.js")
+                new ScriptBundle("~/bundles/firebase", "//cdn.firebase.com/js/client/2.2.2/firebase.js")
                 { CdnFallbackExpression = "window.Firebase" }
                 .Include("~/Scripts/lib/firebase.js")
             );

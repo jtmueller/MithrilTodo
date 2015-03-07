@@ -66,9 +66,10 @@
                 )
             ),
             m('.row', 
-                todoGroups.map(group =>
-                    m('.col-lg-4', _.map(group, renderToDo.bind(undefined, vm)))
-                ).value()
+                todoGroups.map(group => {
+                    var renderItem = renderToDo.bind(undefined, vm);
+                    return m('.col-lg-4', _.map(group, renderItem));
+                }).value()
             ),
             Modal.view(ctrl.dialogController)
         ]);
