@@ -65,8 +65,8 @@
                     renderInputForm(vm)
                 )
             ),
-            m('.row', todoGroups.map(group =>
-                m('.col-lg-4', group.map(renderToDo.bind(undefined, vm))))
+            m('.row', _.map(todoGroups, group =>
+                m('.col-lg-4', _.map(group, renderToDo.bind(undefined, vm))))
             ),
             Modal.view(ctrl.dialogController)
         ]);
