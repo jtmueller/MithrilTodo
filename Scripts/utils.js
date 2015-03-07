@@ -1,23 +1,5 @@
 var Utils;
 (function (Utils) {
-    function groupSize(items, groupSize) {
-        var output = [];
-        var group = [];
-        var i = 0;
-        items.forEach(function (item) {
-            if (i > 0 && i % groupSize === 0) {
-                output.push(group);
-                group = [];
-            }
-            group.push(item);
-            if (i === items.length - 1) {
-                output.push(group);
-            }
-            i++;
-        });
-        return output;
-    }
-    Utils.groupSize = groupSize;
     function isNull(x) {
         return !x;
     }

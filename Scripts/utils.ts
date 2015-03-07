@@ -5,27 +5,6 @@
         length: number;
     }
 
-    /** Breaks an array into groups of at most the given size. */
-    export function groupSize<T>(items: IEachable<T>, groupSize: number) {
-        var output: T[][] = [];
-        var group: T[] = [];
-        var i = 0;
-
-        items.forEach(item => {
-            if (i > 0 && i % groupSize === 0) {
-                output.push(group);
-                group = [];
-            }
-            group.push(item);
-            if (i === items.length - 1) {
-                output.push(group);
-            }
-            i++;
-        });
-
-        return output;
-    }
-
     export function isNull<T>(x: T) { return !x; }
 
     export function isNotNull<T>(x: T) { return !!x; }

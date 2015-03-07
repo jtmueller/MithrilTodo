@@ -255,6 +255,24 @@ declare module _ {
     * Arrays *
     **********/
 
+    //_.chunk
+    interface LoDashStatic {
+        /**
+         * Creates an array of elements split into groups the length of size. If collection can’t be split evenly, the final chunk will be the remaining elements.
+         * @param array The array to split.
+         * @param size The size of each chunk. Defaults to 1.
+         */
+        chunk<T>(array: Array<T>, size?: number): T[][];
+    }
+
+    interface LoDashArrayWrapper<T> {
+        /**
+         * Creates an array of elements split into groups the length of size. If collection can’t be split evenly, the final chunk will be the remaining elements.
+         * @pram size The size of each chunk. Defaults to 1.
+         */
+        chunk(size?: number): LoDashArrayWrapper<T[]>;
+    }
+
     //_.compact
     interface LoDashStatic {
         /**
